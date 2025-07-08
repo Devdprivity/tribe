@@ -12,14 +12,30 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('provider')->nullable()->after('email_verified_at');
-            $table->string('provider_id')->nullable()->after('provider');
-            $table->string('provider_avatar')->nullable()->after('provider_id');
-            $table->json('provider_data')->nullable()->after('provider_avatar');
-            $table->timestamp('last_login_at')->nullable()->after('provider_data');
+            if (!Schema::hasColumn('users', 'provider')) {
+                $table->string('provider')->nullable()->after('email_verified_at');
+            }
+            if (!Schema::hasColumn('users', 'provider_id')) {
+                $table->string('provider_id')->nullable()->after('provider');
+            }
+            if (!Schema::hasColumn('users', 'provider_avatar')) {
+                $table->string('provider_avatar')->nullable()->after('provider_id');
+            }
+            if (!Schema::hasColumn('users', 'provider_data')) {
+                $table->json('provider_data')->nullable()->after('provider_avatar');
+            }
+            if (!Schema::hasColumn('users', 'last_login_at')) {
+                $table->timestamp('last_login_at')->nullable()->after('provider_data');
+            }
 
-            // Index para búsquedas por provider
-            $table->index(['provider', 'provider_id']);
+            // Verificar si el índice existe antes de crearlo
+            $sm = Schema::getConnection()->getDoctrineSchemaManager();
+            $indexes = $sm->listTableIndexes('users');
+            $indexName = 'users_provider_provider_id_index';
+
+            if (!array_key_exists($indexName, $indexes)) {
+                $table->index(['provider', 'provider_id']);
+            }
         });
     }
 
@@ -29,14 +45,22 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex(['provider', 'provider_id']);
-            $table->dropColumn([
-                'provider',
-                'provider_id',
-                'provider_avatar',
-                'provider_data',
-                'last_login_at'
-            ]);
+            // Verificar si el índice existe antes de eliminarlo
+            $sm = Schema::getConnection()->getDoctrineSchemaManager();
+            $indexes = $sm->listTableIndexes('users');
+            $indexName = 'users_provider_provider_id_index';
+
+            if (array_key_exists($indexName, $indexes)) {
+                $table->dropIndex(['provider', 'provider_id']);
+            }
+
+            // Eliminar columnas solo si existen
+            $columns = ['provider', 'provider_id', 'provider_avatar', 'provider_data', 'last_login_at'];
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('users', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };
