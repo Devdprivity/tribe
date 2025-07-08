@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +12,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('posts')) {
+        // Verificar si la tabla existe en PostgreSQL
+        $tableExists = DB::select("
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_schema = 'public'
+                AND table_name = 'posts'
+            )
+        ");
+
+        if (!$tableExists[0]->exists) {
             Schema::create('posts', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
@@ -24,8 +34,10 @@ return new class extends Migration
                 $table->integer('shares_count')->default(0);
                 $table->boolean('is_pinned')->default(false);
                 $table->timestamps();
+            });
 
-                // Índices para optimización
+            // Crear índices después de que la tabla exista
+            Schema::table('posts', function (Blueprint $table) {
                 $table->index(['user_id', 'created_at']);
                 $table->index(['type', 'created_at']);
                 $table->index('is_pinned');
