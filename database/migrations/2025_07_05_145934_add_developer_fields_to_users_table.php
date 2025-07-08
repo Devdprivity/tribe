@@ -20,7 +20,7 @@ return new class extends Migration
         });
 
         // Migramos los datos existentes
-        DB::table('users')->whereNull('username')->orWhereNull('full_name')->chunk(100, function ($users) {
+        DB::table('users')->whereNull('username')->orWhereNull('full_name')->orderBy('id')->chunk(100, function ($users) {
             foreach ($users as $user) {
                 $username = Str::slug($user->name);
                 $baseUsername = $username;
@@ -73,7 +73,7 @@ return new class extends Migration
         });
 
         // Restaurar los datos
-        DB::table('users')->whereNull('name')->chunk(100, function ($users) {
+        DB::table('users')->whereNull('name')->orderBy('id')->chunk(100, function ($users) {
             foreach ($users as $user) {
                 DB::table('users')
                     ->where('id', $user->id)
