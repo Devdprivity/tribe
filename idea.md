@@ -1,0 +1,1 @@
+Quiero crear una red social para desarrolladores y del sector tanto los que aprenden como los senior pero enfocado en compartir experiencias vivencias memes y compartir trabajo algo fuera de serie pero que sea algo único para nosotros donde se puede buscar trabajo que se comparta que ayuden que tenga canales y más como le podemos llamar a esta idea
