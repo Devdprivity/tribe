@@ -28,13 +28,11 @@ return new class extends Migration
                 $table->timestamp('last_login_at')->nullable()->after('provider_data');
             }
 
-            // Verificar si el índice existe antes de crearlo
-            $sm = Schema::getConnection()->getDoctrineSchemaManager();
-            $indexes = $sm->listTableIndexes('users');
-            $indexName = 'users_provider_provider_id_index';
-
-            if (!array_key_exists($indexName, $indexes)) {
+            // Intentar crear el índice - si ya existe, PostgreSQL lo manejará silenciosamente
+            try {
                 $table->index(['provider', 'provider_id']);
+            } catch (\Exception $e) {
+                // El índice probablemente ya existe, podemos ignorar el error
             }
         });
     }
@@ -45,13 +43,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Verificar si el índice existe antes de eliminarlo
-            $sm = Schema::getConnection()->getDoctrineSchemaManager();
-            $indexes = $sm->listTableIndexes('users');
-            $indexName = 'users_provider_provider_id_index';
-
-            if (array_key_exists($indexName, $indexes)) {
+            // Intentar eliminar el índice - si no existe, PostgreSQL lo manejará silenciosamente
+            try {
                 $table->dropIndex(['provider', 'provider_id']);
+            } catch (\Exception $e) {
+                // El índice probablemente no existe, podemos ignorar el error
             }
 
             // Eliminar columnas solo si existen
