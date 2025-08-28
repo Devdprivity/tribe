@@ -45,7 +45,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <Head title="Iniciar Sesión - Tribe" />
 
             {/* Single Unified Login Container */}
-            <div className="relative mx-auto max-w-lg w-full">
+            <div className="relative w-full">
                 {/* Floating Code Snippets Background */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     {/* PHP Code */}
@@ -94,34 +94,34 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 {/* Main Login Card */}
                 <div className="relative z-10 rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 p-8 shadow-2xl border border-purple-500/20 backdrop-blur-sm">
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <div className="mb-6 flex justify-center">
+                    <div className="text-center mb-6">
+                        <div className="mb-4 flex justify-center">
                             <div className="relative">
-                                <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 p-4 shadow-2xl">
-                                    <Code className="h-10 w-10 text-white" />
+                                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 p-3 shadow-2xl">
+                                    <Code className="h-8 w-8 text-white" />
                                 </div>
                                 {/* Glow Effect */}
                                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 blur-xl opacity-40 animate-pulse" />
                             </div>
                         </div>
                         
-                        <h1 className="mb-3 text-3xl font-bold text-white">
+                        <h1 className="mb-2 text-2xl font-bold text-white">
                             Conecta con el Futuro
                         </h1>
-                        <p className="text-slate-300 text-lg">
+                        <p className="text-slate-300 text-base">
                             Únete a la comunidad de desarrolladores que están construyendo el mañana
                         </p>
                     </div>
 
                     {/* Status Message */}
                     {status && (
-                        <div className="mb-6 rounded-2xl bg-emerald-500/10 p-4 text-center text-sm font-medium text-emerald-400 border border-emerald-500/20">
+                        <div className="mb-4 rounded-2xl bg-emerald-500/10 p-3 text-center text-sm font-medium text-emerald-400 border border-emerald-500/20">
                             {status}
                         </div>
                     )}
 
                     {/* Login Form */}
-                    <form className="space-y-6" onSubmit={submit}>
+                    <form className="space-y-4" onSubmit={submit}>
                         {/* Email Field */}
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-sm font-medium text-slate-200">
@@ -138,9 +138,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
                                     placeholder="tu@email.com"
-                                    className="h-14 rounded-2xl border-slate-600 bg-slate-800/50 text-white placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300 group-hover:border-purple-500"
+                                    className="h-12 rounded-2xl border-slate-600 bg-slate-800/50 text-white placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300 group-hover:border-purple-500"
                                 />
-                                <Mail className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-hover:text-violet-400 transition-colors duration-300" />
+                                <Mail className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-hover:text-violet-400 transition-colors duration-300" />
                             </div>
                             <InputError message={errors.email} />
                         </div>
@@ -160,14 +160,14 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="••••••••"
-                                    className="h-14 rounded-2xl border-slate-600 bg-slate-800/50 text-white placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300 pr-12 group-hover:border-purple-500"
+                                    className="h-12 rounded-2xl border-slate-600 bg-slate-800/50 text-white placeholder:text-slate-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 transition-all duration-300 pr-12 group-hover:border-purple-500"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-violet-400 transition-colors duration-300"
                                 >
-                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
                             <InputError message={errors.password} />
@@ -204,18 +204,18 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <Button 
                             type="submit" 
                             size="lg" 
-                            className="h-14 w-full rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-emerald-500 text-lg font-semibold text-white shadow-xl hover:shadow-2xl hover:from-violet-700 hover:via-purple-700 hover:to-emerald-600 focus:ring-2 focus:ring-violet-500/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]" 
+                            className="h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-emerald-500 text-base font-semibold text-white shadow-xl hover:shadow-2xl hover:from-violet-700 hover:via-purple-700 hover:to-emerald-600 focus:ring-2 focus:ring-violet-500/50 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]" 
                             tabIndex={3} 
                             disabled={processing}
                         >
                             {processing ? (
                                 <div className="flex items-center gap-2">
-                                    <LoaderCircle className="h-5 w-5 animate-spin" />
+                                    <LoaderCircle className="h-4 w-4 animate-spin" />
                                     Conectando...
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <Sparkles className="h-5 w-5" />
+                                    <Sparkles className="h-4 w-4" />
                                     Iniciar Sesión
                                 </div>
                             )}
@@ -223,7 +223,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </form>
 
                     {/* Divider */}
-                    <div className="relative my-6">
+                    <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
                             <Separator className="w-full bg-slate-600" />
                         </div>
@@ -238,29 +238,29 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <div className="grid gap-3">
                         <Button
                             variant="outline"
-                            className="relative flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border-slate-600 bg-slate-800/30 text-lg font-medium text-white transition-all duration-300 hover:bg-slate-700/50 hover:border-purple-500 hover:scale-[1.02] group"
+                            className="relative flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border-slate-600 bg-slate-800/30 text-base font-medium text-white transition-all duration-300 hover:bg-slate-700/50 hover:border-purple-500 hover:scale-[1.02] group"
                             type="button"
                             onClick={() => window.location.href = '/auth/github'}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <Github className="relative z-10 h-6 w-6" />
+                            <Github className="relative z-10 h-5 w-5" />
                             <span className="relative z-10">GitHub</span>
                         </Button>
                         
                         <Button
                             variant="outline"
-                            className="relative flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border-slate-600 bg-slate-800/30 text-lg font-medium text-white transition-all duration-300 hover:bg-slate-700/50 hover:border-emerald-500 hover:scale-[1.02] group"
+                            className="relative flex h-12 w-full items-center justify-center gap-3 overflow-hidden rounded-2xl border-slate-600 bg-slate-800/30 text-base font-medium text-white transition-all duration-300 hover:bg-slate-700/50 hover:border-emerald-500 hover:scale-[1.02] group"
                             type="button"
                             onClick={() => window.location.href = '/auth/google'}
                         >
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            <Mail className="relative z-10 h-6 w-6" />
+                            <Mail className="relative z-10 h-5 w-5" />
                             <span className="relative z-10">Google</span>
                         </Button>
                     </div>
 
                     {/* Sign Up Link */}
-                    <div className="text-center pt-6">
+                    <div className="text-center pt-4">
                         <p className="text-slate-400 text-sm">
                             ¿No tienes cuenta?{' '}
                             <TextLink 
@@ -274,17 +274,17 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </div>
 
                     {/* Community Stats Integrated */}
-                    <div className="mt-8 grid grid-cols-3 gap-4 pt-6 border-t border-slate-700/50">
+                    <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-slate-700/50">
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-violet-400">10K+</div>
+                            <div className="text-xl font-bold text-violet-400">10K+</div>
                             <div className="text-xs text-slate-400">Developers</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-purple-400">500+</div>
+                            <div className="text-xl font-bold text-purple-400">500+</div>
                             <div className="text-xs text-slate-400">Proyectos</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-emerald-400">24/7</div>
+                            <div className="text-xl font-bold text-emerald-400">24/7</div>
                             <div className="text-xs text-slate-400">Activo</div>
                         </div>
                     </div>

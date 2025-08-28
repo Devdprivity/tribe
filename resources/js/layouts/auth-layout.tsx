@@ -1,9 +1,17 @@
-import AuthLayoutTemplate from '@/layouts/auth/auth-split-layout';
+import { type PropsWithChildren } from 'react';
 
-export default function AuthLayout({ children, title, description, ...props }: { children: React.ReactNode; title: string; description: string }) {
+interface AuthLayoutProps {
+    name?: string;
+    title?: string;
+    description?: string;
+}
+
+export default function AuthLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
     return (
-        <AuthLayoutTemplate title={title} description={description} {...props}>
-            {children}
-        </AuthLayoutTemplate>
+        <div className="min-h-svh bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 flex items-center justify-center p-4">
+            <div className="w-full max-w-lg">
+                {children}
+            </div>
+        </div>
     );
 }
