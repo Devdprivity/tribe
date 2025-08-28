@@ -48,48 +48,53 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             {/* Single Unified Login Container */}
             <div className="relative w-full flex items-center justify-center">
                 {/* Floating Code Snippets - Left Side */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-40 pointer-events-none">
-                    {/* PHP Code */}
-                    <div className="text-xs text-emerald-400/60 font-mono mb-6">
-                        <span className="typing-animation">&lt;?php<br/>
-                        echo "Hello World";<br/>
-                        ?&gt;</span>
-                    </div>
-                    
-                    {/* Python Code */}
-                    <div className="text-xs text-blue-400/60 font-mono mb-6">
-                        <span className="typing-animation-delay-1">print("Hello")<br/>
-                        if True:<br/>
-                        {'  '}pass</span>
-                    </div>
-                    
-                    {/* JavaScript Code */}
-                    <div className="text-xs text-yellow-400/60 font-mono">
-                        <span className="typing-animation-delay-2">const dev = "awesome";<br/>
-                        console.log(dev);</span>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-40 pointer-events-none w-80">
+                    {/* Login Component Code - Left Side */}
+                    <div className="text-xs text-emerald-400/60 font-mono">
+                        <span className="typing-animation-left">import { '{' } Head, useForm { '}' } from '@inertiajs/react';<br/>
+                        import { '{' } LoaderCircle, Github, Mail, Sparkles, Eye, EyeOff { '}' } from 'lucide-react';<br/>
+                        import { '{' } FormEventHandler, useState { '}' } from 'react';<br/><br/>
+                        import InputError from '@/components/input-error';<br/>
+                        import TextLink from '@/components/text-link';<br/>
+                        import { '{' } Button { '}' } from '@/components/ui/button';<br/>
+                        import { '{' } Checkbox { '}' } from '@/components/ui/checkbox';<br/>
+                        import { '{' } Input { '}' } from '@/components/ui/input';<br/>
+                        import { '{' } Label { '}' } from '@/components/ui/label';<br/>
+                        import { '{' } Separator { '}' } from '@/components/ui/separator';<br/>
+                        import AppLogoIcon from '@/components/app-logo-icon';<br/>
+                        import AuthLayout from '@/layouts/auth-layout';<br/><br/>
+                        type LoginForm = { '{' }<br/>
+                        {'  '}email: string;<br/>
+                        {'  '}password: string;<br/>
+                        {'  '}remember: boolean;<br/>
+                        { '}' };<br/><br/>
+                        interface LoginProps { '{' }<br/>
+                        {'  '}status?: string;<br/>
+                        {'  '}canResetPassword: boolean;<br/>
+                        { '}' }</span>
                     </div>
                 </div>
 
                 {/* Floating Code Snippets - Right Side */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-40 pointer-events-none">
-                    {/* Rust Code */}
-                    <div className="text-xs text-orange-400/60 font-mono mb-6">
-                        <span className="typing-animation-delay-3">fn main() {'{'}<br/>
-                        {'  '}println!("Hello");<br/>
-                        {'}'}</span>
-                    </div>
-                    
-                    {/* Kotlin Code */}
-                    <div className="text-xs text-purple-400/60 font-mono mb-6">
-                        <span className="typing-animation-delay-4">fun main() {'{'}<br/>
-                        {'  '}println("Hello")<br/>
-                        {'}'}</span>
-                    </div>
-                    
-                    {/* Node.js Code */}
-                    <div className="text-xs text-green-400/60 font-mono">
-                        <span className="typing-animation-delay-5">const app = express();<br/>
-                        app.listen(3000);</span>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-40 pointer-events-none w-80">
+                    {/* Login Component Code - Right Side */}
+                    <div className="text-xs text-blue-400/60 font-mono">
+                        <span className="typing-animation-right">export default function Login({ '{' } status, canResetPassword { '}' }: LoginProps) { '{' }<br/>
+                        {'  '}const [showPassword, setShowPassword] = useState(false);<br/>
+                        {'  '}const { '{' } data, setData, post, processing, errors, reset { '}' } = useForm&lt;Required&lt;LoginForm&gt;&gt;({ '{' }<br/>
+                        {'    '}email: '',<br/>
+                        {'    '}password: '',<br/>
+                        {'    '}remember: false,<br/>
+                        {'  '}{ '}' });<br/><br/>
+                        {'  '}const submit: FormEventHandler = (e) =&gt; { '{' }<br/>
+                        {'    '}e.preventDefault();<br/>
+                        {'    '}post(route('login'), { '{' }<br/>
+                        {'      '}onFinish: () =&gt; reset('password'),<br/>
+                        {'    '}{ '}' });<br/>
+                        {'  '}{ '}' };<br/><br/>
+                        {'  '}return (<br/>
+                        {'    '}&lt;AuthLayout&gt;<br/>
+                        {'      '}&lt;Head title="Iniciar Sesión - Tribe" /&gt;</span>
                     </div>
                 </div>
 
@@ -112,7 +117,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <div className="mb-4 flex justify-center">
                             <div className="relative">
                                 <div className="flex h-16 w-16 items-center justify-center rounded-3xl p-3">
-                                    <AppLogoIcon className="h-8 w-8 text-white fill-current" />
+                                    <AppLogoIcon className="h-15 w-15 text-white fill-current" />
                                 </div>
                             </div>
                         </div>

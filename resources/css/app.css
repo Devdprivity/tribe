@@ -159,7 +159,18 @@
 }
 
 /* Typing Animation Effects */
-@keyframes typing {
+@keyframes typing-left {
+    0% {
+        width: 0;
+        overflow: hidden;
+    }
+    100% {
+        width: 100%;
+        overflow: visible;
+    }
+}
+
+@keyframes typing-right {
     0% {
         width: 0;
         overflow: hidden;
@@ -179,50 +190,20 @@
     }
 }
 
-.typing-animation {
+.typing-animation-left {
     display: inline-block;
-    animation: typing 3s steps(40, end) infinite, blink 1s infinite;
+    animation: typing-left 8s steps(80, end) infinite, blink 1s infinite;
     white-space: nowrap;
     border-right: 2px solid;
     overflow: hidden;
+    max-width: 100%;
 }
 
-.typing-animation-delay-1 {
+.typing-animation-right {
     display: inline-block;
-    animation: typing 3s steps(40, end) infinite 0.5s, blink 1s infinite;
+    animation: typing-right 8s steps(80, end) infinite 4s, blink 1s infinite;
     white-space: nowrap;
     border-right: 2px solid;
     overflow: hidden;
-}
-
-.typing-animation-delay-2 {
-    display: inline-block;
-    animation: typing 3s steps(40, end) infinite 1s, blink 1s infinite;
-    white-space: nowrap;
-    border-right: 2px solid;
-    overflow: hidden;
-}
-
-.typing-animation-delay-3 {
-    display: inline-block;
-    animation: typing 3s steps(40, end) infinite 1.5s, blink 1s infinite;
-    white-space: nowrap;
-    border-right: 2px solid;
-    overflow: hidden;
-}
-
-.typing-animation-delay-4 {
-    display: inline-block;
-    animation: typing 3s steps(40, end) infinite 2s, blink 1s infinite;
-    white-space: nowrap;
-    border-right: 2px solid;
-    overflow: hidden;
-}
-
-.typing-animation-delay-5 {
-    display: inline-block;
-    animation: typing 3s steps(40, end) infinite 2.5s, blink 1s infinite;
-    white-space: nowrap;
-    border-right: 2px solid;
-    overflow: hidden;
+    max-width: 100%;
 }
