@@ -48,61 +48,61 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             {/* Single Unified Login Container */}
             <div className="relative w-full flex items-center justify-center">
                 {/* Floating Code Snippets - Left Side */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-20 pointer-events-none">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-40 pointer-events-none">
                     {/* PHP Code */}
-                    <div className="text-xs text-emerald-400/40 font-mono animate-pulse mb-4">
-                        &lt;?php<br/>
+                    <div className="text-xs text-emerald-400/60 font-mono mb-6">
+                        <span className="typing-animation">&lt;?php<br/>
                         echo "Hello World";<br/>
-                        ?&gt;
+                        ?&gt;</span>
                     </div>
                     
                     {/* Python Code */}
-                    <div className="text-xs text-blue-400/40 font-mono animate-pulse delay-1000 mb-4">
-                        print("Hello")<br/>
+                    <div className="text-xs text-blue-400/60 font-mono mb-6">
+                        <span className="typing-animation-delay-1">print("Hello")<br/>
                         if True:<br/>
-                        {'  '}pass
+                        {'  '}pass</span>
                     </div>
                     
                     {/* JavaScript Code */}
-                    <div className="text-xs text-yellow-400/40 font-mono animate-pulse delay-500">
-                        const dev = "awesome";<br/>
-                        console.log(dev);
+                    <div className="text-xs text-yellow-400/60 font-mono">
+                        <span className="typing-animation-delay-2">const dev = "awesome";<br/>
+                        console.log(dev);</span>
                     </div>
                 </div>
 
                 {/* Floating Code Snippets - Right Side */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-20 pointer-events-none">
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-40 pointer-events-none">
                     {/* Rust Code */}
-                    <div className="text-xs text-orange-400/40 font-mono animate-pulse delay-1500 mb-4">
-                        fn main() {'{'}<br/>
+                    <div className="text-xs text-orange-400/60 font-mono mb-6">
+                        <span className="typing-animation-delay-3">fn main() {'{'}<br/>
                         {'  '}println!("Hello");<br/>
-                        {'}'}
+                        {'}'}</span>
                     </div>
                     
                     {/* Kotlin Code */}
-                    <div className="text-xs text-purple-400/40 font-mono animate-pulse delay-2000 mb-4">
-                        fun main() {'{'}<br/>
+                    <div className="text-xs text-purple-400/60 font-mono mb-6">
+                        <span className="typing-animation-delay-4">fun main() {'{'}<br/>
                         {'  '}println("Hello")<br/>
-                        {'}'}
+                        {'}'}</span>
                     </div>
                     
                     {/* Node.js Code */}
-                    <div className="text-xs text-green-400/40 font-mono animate-pulse delay-500">
-                        const app = express();<br/>
-                        app.listen(3000);
+                    <div className="text-xs text-green-400/60 font-mono">
+                        <span className="typing-animation-delay-5">const app = express();<br/>
+                        app.listen(3000);</span>
                     </div>
                 </div>
 
                 {/* Floating Developer Emojis - Left Side */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-32 pointer-events-none">
-                    <div className="text-2xl animate-bounce delay-1000 mb-8">👨🏻‍💻</div>
-                    <div className="text-xl animate-bounce delay-2000">💻</div>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-48 pointer-events-none">
+                    <div className="text-2xl mb-8 opacity-80">👨🏻‍💻</div>
+                    <div className="text-xl opacity-80">💻</div>
                 </div>
 
                 {/* Floating Developer Emojis - Right Side */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-32 pointer-events-none">
-                    <div className="text-2xl animate-bounce delay-500 mb-8">👩‍💻</div>
-                    <div className="text-xl animate-bounce delay-1500">🚀</div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-48 pointer-events-none">
+                    <div className="text-2xl mb-8 opacity-80">👩‍💻</div>
+                    <div className="text-xl opacity-80">🚀</div>
                 </div>
 
                 {/* Main Login Card */}
@@ -111,11 +111,9 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <div className="text-center mb-6">
                         <div className="mb-4 flex justify-center">
                             <div className="relative">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 p-3 shadow-2xl">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-3xl p-3">
                                     <AppLogoIcon className="h-8 w-8 text-white fill-current" />
                                 </div>
-                                {/* Glow Effect */}
-                                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 blur-xl opacity-40 animate-pulse" />
                             </div>
                         </div>
                         
