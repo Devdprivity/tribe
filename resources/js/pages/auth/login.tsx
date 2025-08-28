@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle, Github, Mail, Code, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { LoaderCircle, Github, Mail, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
 import InputError from '@/components/input-error';
@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import AppLogoIcon from '@/components/app-logo-icon';
 import AuthLayout from '@/layouts/auth-layout';
 
 type LoginForm = {
@@ -45,50 +46,63 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <Head title="Iniciar Sesión - Tribe" />
 
             {/* Single Unified Login Container */}
-            <div className="relative w-full">
-                {/* Floating Code Snippets Background */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="relative w-full flex items-center justify-center">
+                {/* Floating Code Snippets - Left Side */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-20 pointer-events-none">
                     {/* PHP Code */}
-                    <div className="absolute top-8 left-4 text-xs text-emerald-400/30 font-mono animate-pulse">
+                    <div className="text-xs text-emerald-400/40 font-mono animate-pulse mb-4">
                         &lt;?php<br/>
                         echo "Hello World";<br/>
                         ?&gt;
                     </div>
                     
                     {/* Python Code */}
-                    <div className="absolute top-20 right-8 text-xs text-blue-400/30 font-mono animate-pulse delay-1000">
+                    <div className="text-xs text-blue-400/40 font-mono animate-pulse delay-1000 mb-4">
                         print("Hello")<br/>
                         if True:<br/>
                         {'  '}pass
                     </div>
                     
                     {/* JavaScript Code */}
-                    <div className="absolute bottom-32 left-6 text-xs text-yellow-400/30 font-mono animate-pulse delay-500">
+                    <div className="text-xs text-yellow-400/40 font-mono animate-pulse delay-500">
                         const dev = "awesome";<br/>
                         console.log(dev);
                     </div>
-                    
+                </div>
+
+                {/* Floating Code Snippets - Right Side */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-20 pointer-events-none">
                     {/* Rust Code */}
-                    <div className="absolute bottom-20 right-4 text-xs text-orange-400/30 font-mono animate-pulse delay-1500">
+                    <div className="text-xs text-orange-400/40 font-mono animate-pulse delay-1500 mb-4">
                         fn main() {'{'}<br/>
                         {'  '}println!("Hello");<br/>
                         {'}'}
                     </div>
                     
                     {/* Kotlin Code */}
-                    <div className="absolute top-1/2 left-2 text-xs text-purple-400/30 font-mono animate-pulse delay-2000">
+                    <div className="text-xs text-purple-400/40 font-mono animate-pulse delay-2000 mb-4">
                         fun main() {'{'}<br/>
                         {'  '}println("Hello")<br/>
                         {'}'}
                     </div>
+                    
+                    {/* Node.js Code */}
+                    <div className="text-xs text-green-400/40 font-mono animate-pulse delay-500">
+                        const app = express();<br/>
+                        app.listen(3000);
+                    </div>
                 </div>
 
-                {/* Floating Developer Emojis */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-12 right-12 text-2xl animate-bounce delay-1000">👨🏻‍💻</div>
-                    <div className="absolute top-24 left-16 text-xl animate-bounce delay-2000">💻</div>
-                    <div className="absolute bottom-24 right-20 text-2xl animate-bounce delay-500">👩‍💻</div>
-                    <div className="absolute bottom-32 left-12 text-xl animate-bounce delay-1500">🚀</div>
+                {/* Floating Developer Emojis - Left Side */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-32 pointer-events-none">
+                    <div className="text-2xl animate-bounce delay-1000 mb-8">👨🏻‍💻</div>
+                    <div className="text-xl animate-bounce delay-2000">💻</div>
+                </div>
+
+                {/* Floating Developer Emojis - Right Side */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-32 pointer-events-none">
+                    <div className="text-2xl animate-bounce delay-500 mb-8">👩‍💻</div>
+                    <div className="text-xl animate-bounce delay-1500">🚀</div>
                 </div>
 
                 {/* Main Login Card */}
@@ -98,7 +112,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         <div className="mb-4 flex justify-center">
                             <div className="relative">
                                 <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 p-3 shadow-2xl">
-                                    <Code className="h-8 w-8 text-white" />
+                                    <AppLogoIcon className="h-8 w-8 text-white fill-current" />
                                 </div>
                                 {/* Glow Effect */}
                                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-emerald-500 blur-xl opacity-40 animate-pulse" />
