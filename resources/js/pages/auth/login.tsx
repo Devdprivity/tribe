@@ -59,7 +59,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <div className="absolute top-20 right-8 text-xs text-blue-400/30 font-mono animate-pulse delay-1000">
                         print("Hello")<br/>
                         if True:<br/>
-                        &nbsp;&nbsp;pass
+                        {'  '}pass
                     </div>
                     
                     {/* JavaScript Code */}
@@ -70,16 +70,16 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     
                     {/* Rust Code */}
                     <div className="absolute bottom-20 right-4 text-xs text-orange-400/30 font-mono animate-pulse delay-1500">
-                        fn main() {<br/>
-                        &nbsp;&nbsp;println!("Hello");<br/>
-                        }
+                        fn main() {'{'}<br/>
+                        {'  '}println!("Hello");<br/>
+                        {'}'}
                     </div>
                     
                     {/* Kotlin Code */}
                     <div className="absolute top-1/2 left-2 text-xs text-purple-400/30 font-mono animate-pulse delay-2000">
-                        fun main() {<br/>
-                        &nbsp;&nbsp;println("Hello")<br/>
-                        }
+                        fun main() {'{'}<br/>
+                        {'  '}println("Hello")<br/>
+                        {'}'}
                     </div>
                 </div>
 
