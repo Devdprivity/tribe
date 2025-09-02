@@ -60,6 +60,27 @@ class CommentController extends Controller
             NotificationService::postCommented($user, $post, $comment);
         }
 
+        // Si es una petición AJAX/API, devolver JSON
+        if (request()->expectsJson() || request()->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'comment' => [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'created_at' => $comment->created_at,
+                    'user' => [
+                        'id' => $comment->user->id,
+                        'username' => $comment->user->username,
+                        'full_name' => $comment->user->full_name,
+                        'avatar' => $comment->user->avatar_url,
+                    ],
+                    'likes_count' => 0,
+                    'replies_count' => 0,
+                    'user_liked' => false,
+                ]
+            ]);
+        }
+
         return back()->with('success', '¡Comentario agregado exitosamente!');
     }
 
@@ -116,9 +137,12 @@ class CommentController extends Controller
      */
     public function getByPost(Post $post)
     {
-        $comments = Comment::getThreadedComments($post->id);
+        $currentUserId = Auth::id();
+        $comments = Comment::getThreadedComments($post->id, $currentUserId);
 
-        return response()->json($comments);
+        return response()->json([
+            'comments' => $comments
+        ]);
     }
 
     /**
@@ -129,5 +153,37 @@ class CommentController extends Controller
         $replies = $comment->replies()->with(['user', 'replies.user'])->get();
 
         return response()->json($replies);
+    }
+
+    /**
+     * Toggle like on comment
+     */
+    public function toggleLike(Comment $comment)
+    {
+        $user = Auth::user();
+        
+        // Verificar si el usuario ya dio like
+        $existingLike = $comment->likes()->where('user_id', $user->id)->first();
+        
+        if ($existingLike) {
+            // Remover like
+            $existingLike->delete();
+            $action = 'removed';
+        } else {
+            // Agregar like
+            $comment->likes()->create([
+                'user_id' => $user->id,
+            ]);
+            
+            // Crear notificación de like
+            NotificationService::commentLiked($user, $comment);
+            
+            $action = 'added';
+        }
+        
+        return response()->json([
+            'action' => $action,
+            'likes_count' => $comment->likes()->count()
+        ]);
     }
 }

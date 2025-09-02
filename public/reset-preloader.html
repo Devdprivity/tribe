@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Preloader - Tribe</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #00d2d3 0%, #54a0ff 100%);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .storage-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Reset Preloader - Tribe</h1>
+        <p>Esta herramienta te permite limpiar completamente el almacenamiento local para forzar que el preloader se muestre desde cero en tu próxima visita.</p>
+        
+        <div class="storage-info" id="storageInfo">
+            <strong>Estado actual del almacenamiento:</strong><br>
+            <span id="storageContent">Cargando...</span>
+        </div>
+        
+        <button class="btn btn-danger" onclick="clearAllStorage()">🗑️ Limpiar Todo el Almacenamiento</button>
+        <button class="btn" onclick="clearOnlyOnboarding()">📚 Limpiar Solo Onboarding</button>
+        <button class="btn" onclick="checkStorage()">🔍 Verificar Estado</button>
+        <br><br>
+        <a href="/" class="btn btn-success">🏠 Ir a la Aplicación</a>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function checkStorage() {
+            const storageContent = document.getElementById('storageContent');
+            const items = [];
+            
+            // Verificar localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                items.push(`localStorage.${key}: ${value}`);
+            }
+            
+            // Verificar sessionStorage
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                const value = sessionStorage.getItem(key);
+                items.push(`sessionStorage.${key}: ${value}`);
+            }
+            
+            if (items.length === 0) {
+                storageContent.innerHTML = '<span style="color: #28a745;">✅ Almacenamiento completamente limpio</span>';
+            } else {
+                storageContent.innerHTML = items.join('<br>');
+            }
+        }
+
+        function clearAllStorage() {
+            // Limpiar localStorage
+            localStorage.clear();
+            
+            // Limpiar sessionStorage
+            sessionStorage.clear();
+            
+            showStatus('🧹 Almacenamiento completamente limpiado. El preloader se mostrará en tu próxima visita.', 'success');
+            checkStorage();
+        }
+
+        function clearOnlyOnboarding() {
+            // Solo limpiar el onboarding
+            localStorage.removeItem('tribe_onboarding_completed');
+            sessionStorage.removeItem('tribe_session_initialized');
+            
+            showStatus('📚 Datos de onboarding limpiados. Se mostrará el preloader y onboarding en tu próxima visita.', 'success');
+            checkStorage();
+        }
+
+        // Verificar estado al cargar la página
+        window.onload = function() {
+            checkStorage();
+        };
+    </script>
+</body>
+</html>

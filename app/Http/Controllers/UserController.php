@@ -252,4 +252,24 @@ class UserController extends Controller
             'filters' => $request->only('level', 'location'),
         ]);
     }
+
+    /**
+     * Update user theme preference
+     */
+    public function updateThemePreference(Request $request)
+    {
+        $request->validate([
+            'theme_preference' => 'required|in:light,dark,system',
+        ]);
+
+        $user = Auth::user();
+        $user->update([
+            'theme_preference' => $request->theme_preference,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'theme_preference' => $user->theme_preference,
+        ]);
+    }
 }

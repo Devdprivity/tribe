@@ -38,6 +38,7 @@ class User extends Authenticatable
         'provider_avatar',
         'provider_data',
         'last_login_at',
+        'theme_preference',
     ];
 
     /**
@@ -75,6 +76,14 @@ class User extends Authenticatable
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    /**
+     * Historias del usuario
+     */
+    public function stories(): HasMany
+    {
+        return $this->hasMany(Story::class);
     }
 
     /**
@@ -263,7 +272,17 @@ class User extends Authenticatable
      */
     public function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar ?? $this->provider_avatar;
+        // Priorizar avatar local, luego avatar del proveedor
+        if (!empty($this->avatar)) {
+            return $this->avatar;
+        }
+        
+        // Si no hay avatar local, usar el del proveedor
+        if (!empty($this->provider_avatar)) {
+            return $this->provider_avatar;
+        }
+        
+        return null;
     }
 
     /**
@@ -275,17 +294,37 @@ class User extends Authenticatable
     }
 
     /**
-     * Create or update user from social provider data.
+     * Update provider avatar from social provider.
      */
-    public static function createOrUpdateFromProvider(string $provider, array $providerUser): self
+    public function updateProviderAvatar(string $newAvatarUrl): void
+    {
+        $this->update([
+            'provider_avatar' => $newAvatarUrl,
+            // Si no hay avatar local, también actualizar el avatar principal
+            'avatar' => empty($this->avatar) ? $newAvatarUrl : $this->avatar,
+        ]);
+    }
+
+    /**
+     * Create or update user from social provider data.
+     * Returns array with user instance and isNewUser flag.
+     */
+    public static function createOrUpdateFromProvider(string $provider, array $providerUser): array
     {
         $user = self::where('provider', $provider)
             ->where('provider_id', $providerUser['id'])
             ->first();
 
+        $isNewUser = false;
+
         if (!$user) {
             // Check if user exists with same email
             $user = self::where('email', $providerUser['email'])->first();
+            
+            // If no user found at all, this is a new user
+            if (!$user) {
+                $isNewUser = true;
+            }
         }
 
         // 1. Generar username base según proveedor
@@ -314,6 +353,11 @@ class User extends Authenticatable
             'last_login_at' => now(),
             'username' => $username, // SIEMPRE el username único
         ];
+
+        // Si no hay avatar local, usar el del proveedor
+        if (empty($user?->avatar) && !empty($providerUser['avatar'])) {
+            $userData['avatar'] = $providerUser['avatar'];
+        }
 
         // Extraer datos adicionales
         if ($provider === 'github') {
@@ -344,6 +388,9 @@ class User extends Authenticatable
             $user = self::create($userData);
         }
 
-        return $user;
+        return [
+            'user' => $user,
+            'isNewUser' => $isNewUser
+        ];
     }
 }

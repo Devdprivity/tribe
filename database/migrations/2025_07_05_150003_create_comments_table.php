@@ -12,16 +12,30 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Verificar si la tabla existe en PostgreSQL
-        $tableExists = DB::select("
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables
-                WHERE table_schema = 'public'
-                AND table_name = 'comments'
-            )
-        ");
+        // Verificar si la tabla existe de manera compatible con múltiples bases de datos
+        $tableExists = false;
+        
+        try {
+            if (DB::connection()->getDriverName() === 'pgsql') {
+                // PostgreSQL
+                $tableExists = DB::select("
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = 'comments'
+                    )
+                ");
+                $tableExists = $tableExists[0]->exists;
+            } else {
+                // SQLite, MySQL, etc.
+                $tableExists = Schema::hasTable('comments');
+            }
+        } catch (Exception $e) {
+            // Si hay algún error, asumimos que la tabla no existe
+            $tableExists = false;
+        }
 
-        if (!$tableExists[0]->exists) {
+        if (!$tableExists) {
             Schema::create('comments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');

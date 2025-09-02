@@ -21,6 +21,8 @@ import {
     TrendingUp
 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import UsersSkeleton from '@/components/users-skeleton';
+import { useState, useEffect } from 'react';
 
 interface User {
     id: number;
@@ -96,15 +98,27 @@ const formatJoinDate = (date: string) => {
     return `Se unió hace ${Math.floor(diffInDays / 365)} años`;
 };
 
-function UserCard({ user }: { user: User }) {
+function UserCard({ 
+    user, 
+    isFollowing, 
+    followersCount, 
+    isLoading, 
+    onFollow 
+}: { 
+    user: User; 
+    isFollowing: boolean; 
+    followersCount: number; 
+    isLoading: boolean; 
+    onFollow: (userId: number, currentFollowState: boolean) => void; 
+}) {
     return (
-        <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-                <div className="flex items-start gap-4">
+        <Card className="hover:shadow-md transition-shadow apple-liquid-card">
+            <CardHeader className="pb-4">
+                <div className="flex items-start gap-6">
                     <Link href={`/users/${user.id}`}>
-                        <Avatar className="h-16 w-16">
+                        <Avatar className="h-20 w-20 ring-2 ring-white/20">
                             <AvatarImage src={user.avatar} />
-                            <AvatarFallback className={getLevelColor(user.level)}>
+                            <AvatarFallback className={`${getLevelColor(user.level)} text-white font-bold text-xl`}>
                                 {user.full_name?.charAt(0)}
                             </AvatarFallback>
                         </Avatar>
@@ -112,38 +126,51 @@ function UserCard({ user }: { user: User }) {
                     <div className="flex-1">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <Link href={`/users/${user.id}`} className="font-semibold text-lg hover:underline">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Link href={`/users/${user.id}`} className="font-semibold text-xl hover:underline text-white">
                                         {user.full_name}
                                     </Link>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge variant="outline" className="text-sm bg-white/10 text-white border-white/20 px-3 py-1">
                                         {getLevelLabel(user.level)}
                                     </Badge>
                                     {user.is_open_to_work && (
-                                        <Badge variant="secondary" className="text-xs">
+                                        <Badge variant="secondary" className="text-sm bg-green-500/80 text-white border-green-400/50 px-3 py-1">
                                             <Briefcase className="h-3 w-3 mr-1" />
                                             Disponible
                                         </Badge>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-3 text-sm text-white/70">
                                     <span>@{user.username}</span>
                                     <span>•</span>
                                     <span>{formatExperience(user.years_experience)} exp.</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                {user.is_following ? (
-                                    <Button variant="outline" size="sm">
-                                        <UserCheck className="h-4 w-4 mr-1" />
-                                        Siguiendo
-                                    </Button>
-                                ) : (
-                                    <Button size="sm">
-                                        <UserPlus className="h-4 w-4 mr-1" />
-                                        Seguir
-                                    </Button>
-                                )}
+                                <Button 
+                                    variant={isFollowing ? "outline" : "default"}
+                                    size="sm" 
+                                    onClick={() => onFollow(user.id, isFollowing)}
+                                    disabled={isLoading}
+                                    className={isFollowing 
+                                        ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 rounded-xl apple-liquid-button px-4 py-2" 
+                                        : "bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25 rounded-xl apple-liquid-button px-4 py-2"
+                                    }
+                                >
+                                    {isLoading ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    ) : isFollowing ? (
+                                        <>
+                                            <UserCheck className="h-4 w-4 mr-2" />
+                                            Siguiendo
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserPlus className="h-4 w-4 mr-2" />
+                                            Seguir
+                                        </>
+                                    )}
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -151,66 +178,69 @@ function UserCard({ user }: { user: User }) {
             </CardHeader>
 
             <CardContent className="pt-0">
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {/* Bio */}
                     {user.bio && (
-                        <CardDescription className="line-clamp-2">
+                        <CardDescription className="line-clamp-2 text-white/80 text-base leading-relaxed">
                             {user.bio}
                         </CardDescription>
                     )}
 
                     {/* Ubicación */}
                     {user.location && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-3 text-sm text-white/70">
                             <MapPin className="h-4 w-4" />
                             <span>{user.location}</span>
                         </div>
                     )}
 
                     {/* Estadísticas */}
-                    <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="grid grid-cols-3 gap-6 text-center py-4">
                         <div>
-                            <div className="font-semibold">{user.posts_count}</div>
-                            <div className="text-xs text-muted-foreground">Posts</div>
+                            <div className="font-bold text-xl text-white">{user.posts_count}</div>
+                            <div className="text-sm text-white/70">Posts</div>
                         </div>
                         <div>
-                            <div className="font-semibold">{user.followers_count}</div>
-                            <div className="text-xs text-muted-foreground">Seguidores</div>
+                            <div className="font-bold text-xl text-white">{followersCount}</div>
+                            <div className="text-sm text-white/70">Seguidores</div>
                         </div>
                         <div>
-                            <div className="font-semibold">{user.following_count}</div>
-                            <div className="text-xs text-muted-foreground">Siguiendo</div>
+                            <div className="font-bold text-xl text-white">{user.following_count}</div>
+                            <div className="text-sm text-white/70">Siguiendo</div>
                         </div>
                     </div>
 
                     {/* Enlaces sociales */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         {user.github_username && (
-                            <Button variant="outline" size="sm" asChild>
+                            <Button variant="outline" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 rounded-lg apple-liquid-button px-4 py-2">
                                 <a href={`https://github.com/${user.github_username}`} target="_blank" rel="noopener">
-                                    <Github className="h-4 w-4" />
+                                    <Github className="h-4 w-4 mr-2" />
+                                    GitHub
                                 </a>
                             </Button>
                         )}
                         {user.linkedin_profile && (
-                            <Button variant="outline" size="sm" asChild>
+                            <Button variant="outline" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 rounded-lg apple-liquid-button px-4 py-2">
                                 <a href={user.linkedin_profile} target="_blank" rel="noopener">
-                                    <Linkedin className="h-4 w-4" />
+                                    <Linkedin className="h-4 w-4 mr-2" />
+                                    LinkedIn
                                 </a>
                             </Button>
                         )}
                         {user.website && (
-                            <Button variant="outline" size="sm" asChild>
+                            <Button variant="outline" size="sm" asChild className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 rounded-lg apple-liquid-button px-4 py-2">
                                 <a href={user.website} target="_blank" rel="noopener">
-                                    <ExternalLink className="h-4 w-4" />
+                                    <ExternalLink className="h-4 w-4 mr-2" />
+                                    Sitio Web
                                 </a>
                             </Button>
                         )}
                     </div>
 
                     {/* Fecha de registro */}
-                    <div className="text-xs text-muted-foreground border-t pt-3">
-                        <Calendar className="h-3 w-3 inline mr-1" />
+                    <div className="text-sm text-white/70 border-t border-white/20 pt-4">
+                        <Calendar className="h-4 w-4 inline mr-2" />
                         {formatJoinDate(user.created_at)}
                     </div>
                 </div>
@@ -219,39 +249,55 @@ function UserCard({ user }: { user: User }) {
     );
 }
 
-function UserSidebar({ featuredDevelopers, newMembers }: { featuredDevelopers?: User[]; newMembers?: User[] }) {
+function UserSidebar({ 
+    featuredDevelopers, 
+    newMembers, 
+    userFollowStates, 
+    userFollowersCounts, 
+    followLoadingStates, 
+    onFollow 
+}: { 
+    featuredDevelopers?: User[]; 
+    newMembers?: User[]; 
+    userFollowStates: Record<number, boolean>; 
+    userFollowersCounts: Record<number, number>; 
+    followLoadingStates: Record<number, boolean>; 
+    onFollow: (userId: number, currentFollowState: boolean) => void; 
+}) {
     return (
         <div className="space-y-6">
             {/* Desarrolladores Destacados */}
             {featuredDevelopers && featuredDevelopers.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Star className="h-5 w-5" />
+                <Card className="apple-liquid-card border border-white/20 shadow-2xl">
+                    <CardHeader className="border-b border-white/10 pb-4">
+                        <CardTitle className="text-lg flex items-center gap-2 text-white font-bold">
+                            <Star className="h-5 w-5 text-yellow-400" />
                             Destacados
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4 pt-4">
                         {featuredDevelopers.slice(0, 5).map((user) => (
-                            <div key={user.id} className="flex items-center gap-3">
-                                <Link href={`/users/${user.id}`}>
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage src={user.avatar} />
-                                        <AvatarFallback className={getLevelColor(user.level)}>
-                                            {user.full_name?.charAt(0)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </Link>
-                                <div className="flex-1">
-                                    <Link href={`/users/${user.id}`} className="font-medium hover:underline">
-                                        {user.full_name}
+                            <div key={user.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-200 group">
+                                <div className="flex items-center gap-4">
+                                    <Link href={`/users/${user.id}`}>
+                                        <Avatar className="h-14 w-14 ring-2 ring-white/20 group-hover:ring-white/30 transition-all duration-200">
+                                            <AvatarImage src={user.avatar} />
+                                            <AvatarFallback className={`${getLevelColor(user.level)} text-white font-bold text-lg`}>
+                                                {user.full_name?.charAt(0)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     </Link>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Badge variant="outline" className="text-xs">
-                                            {getLevelLabel(user.level)}
-                                        </Badge>
-                                        <span>•</span>
-                                        <span>{user.followers_count} seguidores</span>
+                                    <div className="flex-1 min-w-0">
+                                        <Link href={`/users/${user.id}`} className="font-semibold hover:underline text-white hover:text-blue-300 transition-colors block truncate text-base">
+                                            {user.full_name}
+                                        </Link>
+                                        <div className="flex items-center gap-3 text-sm text-white/70 mt-2">
+                                            <Badge variant="outline" className="text-xs bg-white/10 text-white border-white/20 px-3 py-1 backdrop-blur-sm">
+                                                {getLevelLabel(user.level)}
+                                            </Badge>
+                                            <span>•</span>
+                                            <span className="truncate">{userFollowersCounts[user.id] || user.followers_count} seguidores</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -262,39 +308,57 @@ function UserSidebar({ featuredDevelopers, newMembers }: { featuredDevelopers?: 
 
             {/* Nuevos Miembros */}
             {newMembers && newMembers.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5" />
+                <Card className="apple-liquid-card border border-white/20 shadow-2xl">
+                    <CardHeader className="border-b border-white/10 pb-4">
+                        <CardTitle className="text-lg flex items-center gap-2 text-white font-bold">
+                            <TrendingUp className="h-5 w-5 text-green-400" />
                             Nuevos Miembros
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4 pt-4">
                         {newMembers.slice(0, 5).map((user) => (
-                            <div key={user.id} className="flex items-center gap-3">
-                                <Link href={`/users/${user.id}`}>
-                                    <Avatar className="h-10 w-10">
-                                        <AvatarImage src={user.avatar} />
-                                        <AvatarFallback className={getLevelColor(user.level)}>
-                                            {user.full_name?.charAt(0)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                </Link>
-                                <div className="flex-1">
-                                    <Link href={`/users/${user.id}`} className="font-medium hover:underline">
-                                        {user.full_name}
+                            <div key={user.id} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-200 group">
+                                <div className="flex items-center gap-4">
+                                    <Link href={`/users/${user.id}`}>
+                                        <Avatar className="h-14 w-14 ring-2 ring-white/20 group-hover:ring-white/30 transition-all duration-200">
+                                            <AvatarImage src={user.avatar} />
+                                            <AvatarFallback className={`${getLevelColor(user.level)} text-white font-bold text-lg`}>
+                                                {user.full_name?.charAt(0)}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     </Link>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Badge variant="outline" className="text-xs">
-                                            {getLevelLabel(user.level)}
-                                        </Badge>
-                                        <span>•</span>
-                                        <span>@{user.username}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <Link href={`/users/${user.id}`} className="font-semibold hover:underline text-white hover:text-blue-300 transition-colors block truncate text-base">
+                                            {user.full_name}
+                                        </Link>
+                                        <div className="flex items-center gap-3 text-sm text-white/70 mt-2">
+                                            <Badge variant="outline" className="text-xs bg-white/10 text-white border-white/20 px-3 py-1 backdrop-blur-sm">
+                                                {getLevelLabel(user.level)}
+                                            </Badge>
+                                            <span>•</span>
+                                            <span className="truncate">@{user.username}</span>
+                                        </div>
                                     </div>
+                                    <Button 
+                                        size="sm" 
+                                        variant={userFollowStates[user.id] ? "outline" : "default"}
+                                        onClick={() => onFollow(user.id, userFollowStates[user.id] || false)}
+                                        disabled={followLoadingStates[user.id]}
+                                        className={`${
+                                            userFollowStates[user.id] 
+                                                ? "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30" 
+                                                : "bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25"
+                                        } rounded-lg apple-liquid-button px-4 py-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0`}
+                                    >
+                                        {followLoadingStates[user.id] ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        ) : userFollowStates[user.id] ? (
+                                            <UserCheck className="h-4 w-4" />
+                                        ) : (
+                                            <UserPlus className="h-4 w-4" />
+                                        )}
+                                    </Button>
                                 </div>
-                                <Button size="sm" variant="outline">
-                                    <UserPlus className="h-4 w-4" />
-                                </Button>
                             </div>
                         ))}
                     </CardContent>
@@ -302,33 +366,41 @@ function UserSidebar({ featuredDevelopers, newMembers }: { featuredDevelopers?: 
             )}
 
             {/* Filtros rápidos */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Filtros Rápidos</CardTitle>
+            <Card className="apple-liquid-card border border-white/20 shadow-2xl">
+                <CardHeader className="border-b border-white/10 pb-4">
+                    <CardTitle className="text-lg text-white font-bold">Filtros Rápidos</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <Link href="/users?open_to_work=true" className="block p-2 rounded-lg hover:bg-muted transition-colors">
-                        <div className="flex items-center gap-2">
-                            <Briefcase className="h-4 w-4" />
-                            <span className="text-sm">Disponibles para trabajar</span>
+                <CardContent className="space-y-4 pt-4">
+                    <Link href="/users?open_to_work=true" className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 hover:bg-white/10 transition-all duration-200 text-white hover:text-white border border-white/10 hover:border-white/20 hover:shadow-lg group">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-green-500/20 rounded-lg group-hover:bg-green-500/30 transition-all duration-200 flex-shrink-0">
+                                <Briefcase className="h-5 w-5 text-green-400" />
+                            </div>
+                            <span className="text-sm font-medium">Disponibles para trabajar</span>
                         </div>
                     </Link>
-                    <Link href="/users?level=junior" className="block p-2 rounded-lg hover:bg-muted transition-colors">
-                        <div className="flex items-center gap-2">
-                            <UsersIcon className="h-4 w-4" />
-                            <span className="text-sm">Desarrolladores junior</span>
+                    <Link href="/users?level=junior" className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 hover:bg-white/10 transition-all duration-200 text-white hover:text-white border border-white/10 hover:border-white/20 hover:shadow-lg group">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-all duration-200 flex-shrink-0">
+                                <UsersIcon className="h-5 w-5 text-blue-400" />
+                            </div>
+                            <span className="text-sm font-medium">Desarrolladores junior</span>
                         </div>
                     </Link>
-                    <Link href="/users?level=senior" className="block p-2 rounded-lg hover:bg-muted transition-colors">
-                        <div className="flex items-center gap-2">
-                            <UsersIcon className="h-4 w-4" />
-                            <span className="text-sm">Desarrolladores senior</span>
+                    <Link href="/users?level=senior" className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 hover:bg-white/10 transition-all duration-200 text-white hover:text-white border border-white/10 hover:border-white/20 hover:shadow-lg group">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-purple-500/20 rounded-lg group-hover:bg-purple-500/30 transition-all duration-200 flex-shrink-0">
+                                <UsersIcon className="h-5 w-5 text-purple-400" />
+                            </div>
+                            <span className="text-sm font-medium">Desarrolladores senior</span>
                         </div>
                     </Link>
-                    <Link href="/users?has_github=true" className="block p-2 rounded-lg hover:bg-muted transition-colors">
-                        <div className="flex items-center gap-2">
-                            <Github className="h-4 w-4" />
-                            <span className="text-sm">Con perfil de GitHub</span>
+                    <Link href="/users?has_github=true" className="block bg-white/5 backdrop-blur-sm rounded-xl p-4 hover:bg-white/10 transition-all duration-200 text-white hover:text-white border border-white/10 hover:border-white/20 hover:shadow-lg group">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-gray-500/20 rounded-lg group-hover:bg-gray-500/30 transition-all duration-200 flex-shrink-0">
+                                <Github className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <span className="text-sm font-medium">Con perfil de GitHub</span>
                         </div>
                     </Link>
                 </CardContent>
@@ -338,104 +410,207 @@ function UserSidebar({ featuredDevelopers, newMembers }: { featuredDevelopers?: 
 }
 
 export default function Users({ users, filters, featured_developers, new_members }: Props) {
+    const [loading, setLoading] = useState(true);
+    
+    // Estado local para el seguimiento de usuarios
+    const [userFollowStates, setUserFollowStates] = useState<Record<number, boolean>>({});
+    const [userFollowersCounts, setUserFollowersCounts] = useState<Record<number, number>>({});
+    const [followLoadingStates, setFollowLoadingStates] = useState<Record<number, boolean>>({});
+
+    // Función para manejar seguir/dejar de seguir usuarios
+    const handleFollow = async (userId: number, currentFollowState: boolean) => {
+        // Evitar múltiples clicks
+        if (followLoadingStates[userId]) return;
+        
+        // Actualizar estado de carga
+        setFollowLoadingStates(prev => ({ ...prev, [userId]: true }));
+        
+        try {
+            const response = await fetch(`/users/${userId}/${currentFollowState ? 'unfollow' : 'follow'}`, {
+                method: currentFollowState ? 'DELETE' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if (response.ok) {
+                // Actualizar estado de seguimiento
+                setUserFollowStates(prev => ({ ...prev, [userId]: !currentFollowState }));
+                
+                // Actualizar contador de seguidores
+                setUserFollowersCounts(prev => ({
+                    ...prev,
+                    [userId]: prev[userId] + (currentFollowState ? -1 : 1)
+                }));
+            }
+        } catch (error) {
+            console.error('Error following user:', error);
+        } finally {
+            // Remover estado de carga
+            setFollowLoadingStates(prev => ({ ...prev, [userId]: false }));
+        }
+    };
+
+    // Inicializar estados locales con datos del servidor
+    useEffect(() => {
+        const initialFollowStates: Record<number, boolean> = {};
+        const initialFollowersCounts: Record<number, number> = {};
+        
+        // Usuarios principales
+        users.data.forEach(user => {
+            initialFollowStates[user.id] = user.is_following || false;
+            initialFollowersCounts[user.id] = user.followers_count;
+        });
+        
+        // Desarrolladores destacados
+        featured_developers?.forEach(user => {
+            initialFollowStates[user.id] = user.is_following || false;
+            initialFollowersCounts[user.id] = user.followers_count;
+        });
+        
+        // Nuevos miembros
+        new_members?.forEach(user => {
+            initialFollowStates[user.id] = user.is_following || false;
+            initialFollowersCounts[user.id] = user.followers_count;
+        });
+        
+        setUserFollowStates(initialFollowStates);
+        setUserFollowersCounts(initialFollowersCounts);
+    }, [users.data, featured_developers, new_members]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setLoading(false);
+        }, 1000); // Simulate API call
+        return () => clearTimeout(timer);
+    }, []);
+
     return (
         <AppLayout>
             <Head title="Desarrolladores" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Contenido Principal */}
-                <div className="lg:col-span-3 space-y-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold">Desarrolladores</h1>
-                            <p className="text-muted-foreground">
-                                Conecta con la comunidad de desarrolladores
-                            </p>
+            {loading ? (
+                <UsersSkeleton />
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Contenido Principal */}
+                    <div className="lg:col-span-3 space-y-6">
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold text-white">Desarrolladores</h1>
+                                <p className="text-white/70">
+                                    Conecta con la comunidad de desarrolladores
+                                </p>
+                            </div>
+                            <Button className="bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25 rounded-xl apple-liquid-button">
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                Invitar Amigos
+                            </Button>
                         </div>
-                        <Button>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Invitar Amigos
-                        </Button>
+
+                        {/* Búsqueda y Filtros */}
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="relative md:col-span-2">
+                                    <Search className="absolute left-3 top-3 h-4 w-4 text-white/70" />
+                                    <Input
+                                        placeholder="Buscar desarrolladores..."
+                                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
+                                        defaultValue={filters.search || ''}
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-white/70" />
+                                    <Input
+                                        placeholder="Ubicación"
+                                        className="pl-10 bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
+                                        defaultValue={filters.location || ''}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="cursor-pointer bg-white/10 text-white border-white/20 hover:bg-white/20">
+                                    <Filter className="h-3 w-3 mr-1" />
+                                    Todos los filtros
+                                </Badge>
+                                <Badge 
+                                    variant={filters.level === 'junior' ? "default" : "outline"}
+                                    className={filters.level === 'junior' ? "bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25" : "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30"}
+                                >
+                                    <Link href="/users?level=junior" className="text-white">Junior</Link>
+                                </Badge>
+                                <Badge 
+                                    variant={filters.level === 'mid' ? "default" : "outline"}
+                                    className={filters.level === 'mid' ? "bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25" : "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30"}
+                                >
+                                    <Link href="/users?level=mid" className="text-white">Mid-level</Link>
+                                </Badge>
+                                <Badge 
+                                    variant={filters.level === 'senior' ? "default" : "outline"}
+                                    className={filters.level === 'senior' ? "bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25" : "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30"}
+                                >
+                                    <Link href="/users?level=senior" className="text-white">Senior</Link>
+                                </Badge>
+                                <Badge 
+                                    variant={filters.open_to_work ? "default" : "outline"}
+                                    className={`${filters.open_to_work ? "bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25" : "bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30"} min-w-[120px] px-4`}
+                                >
+                                    <Link href="/users?open_to_work=true" className="text-white flex items-center justify-center w-full">
+                                        <Briefcase className="h-3 w-3 mr-2" />
+                                        Disponible
+                                    </Link>
+                                </Badge>
+                            </div>
+                        </div>
+
+                        {/* Lista de Desarrolladores */}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            {users.data.length > 0 ? (
+                                users.data.map((user) => (
+                                    <UserCard 
+                                        key={user.id} 
+                                        user={user} 
+                                        isFollowing={userFollowStates[user.id] || false}
+                                        followersCount={userFollowersCounts[user.id] || user.followers_count}
+                                        isLoading={followLoadingStates[user.id] || false}
+                                        onFollow={handleFollow}
+                                    />
+                                ))
+                            ) : (
+                                <div className="col-span-full">
+                                    <Card className="apple-liquid-card">
+                                        <CardContent className="pt-6 text-center">
+                                            <UsersIcon className="h-12 w-12 mx-auto mb-4 text-white/70" />
+                                            <h3 className="text-lg font-semibold mb-2 text-white">No se encontraron desarrolladores</h3>
+                                            <p className="text-white/70 mb-4">
+                                                Prueba ajustando los filtros de búsqueda.
+                                            </p>
+                                            <Button variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 rounded-xl apple-liquid-button">
+                                                Limpiar filtros
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Búsqueda y Filtros */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="relative md:col-span-2">
-                                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Buscar desarrolladores..."
-                                    className="pl-10"
-                                    defaultValue={filters.search || ''}
-                                />
-                            </div>
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Ubicación"
-                                    className="pl-10"
-                                    defaultValue={filters.location || ''}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="cursor-pointer">
-                                <Filter className="h-3 w-3 mr-1" />
-                                Todos los filtros
-                            </Badge>
-                            <Badge variant={filters.level === 'junior' ? "default" : "outline"}>
-                                <Link href="/users?level=junior">Junior</Link>
-                            </Badge>
-                            <Badge variant={filters.level === 'mid' ? "default" : "outline"}>
-                                <Link href="/users?level=mid">Mid-level</Link>
-                            </Badge>
-                            <Badge variant={filters.level === 'senior' ? "default" : "outline"}>
-                                <Link href="/users?level=senior">Senior</Link>
-                            </Badge>
-                            <Badge variant={filters.open_to_work ? "default" : "outline"}>
-                                <Link href="/users?open_to_work=true">
-                                    <Briefcase className="h-3 w-3 mr-1" />
-                                    Disponible
-                                </Link>
-                            </Badge>
-                        </div>
-                    </div>
-
-                    {/* Lista de Desarrolladores */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {users.data.length > 0 ? (
-                            users.data.map((user) => (
-                                <UserCard key={user.id} user={user} />
-                            ))
-                        ) : (
-                            <div className="col-span-full">
-                                <Card>
-                                    <CardContent className="pt-6 text-center">
-                                        <UsersIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                                        <h3 className="text-lg font-semibold mb-2">No se encontraron desarrolladores</h3>
-                                        <p className="text-muted-foreground mb-4">
-                                            Prueba ajustando los filtros de búsqueda.
-                                        </p>
-                                        <Button variant="outline">
-                                            Limpiar filtros
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        )}
+                    {/* Sidebar */}
+                    <div className="lg:col-span-1">
+                        <UserSidebar
+                            featuredDevelopers={featured_developers}
+                            newMembers={new_members}
+                            userFollowStates={userFollowStates}
+                            userFollowersCounts={userFollowersCounts}
+                            followLoadingStates={followLoadingStates}
+                            onFollow={handleFollow}
+                        />
                     </div>
                 </div>
-
-                {/* Sidebar */}
-                <div className="lg:col-span-1">
-                    <UserSidebar
-                        featuredDevelopers={featured_developers}
-                        newMembers={new_members}
-                    />
-                </div>
-            </div>
+            )}
         </AppLayout>
     );
 }

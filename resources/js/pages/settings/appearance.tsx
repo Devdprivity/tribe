@@ -5,7 +5,7 @@ import HeadingSmall from '@/components/heading-small';
 import { type BreadcrumbItem } from '@/types';
 
 import AppLayout from '@/layouts/app-layout';
-import SettingsLayout from '@/layouts/settings/layout';
+import { UserProfilePanel } from '@/components/user-profile-panel';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,12 +19,18 @@ export default function Appearance() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Appearance settings" />
 
-            <SettingsLayout>
-                <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Contenido Principal */}
+                <div className="lg:col-span-3 space-y-6">
                     <HeadingSmall title="Appearance settings" description="Update your account's appearance settings" />
                     <AppearanceTabs />
                 </div>
-            </SettingsLayout>
+
+                {/* Panel Derecho */}
+                <div className="lg:col-span-1">
+                    <UserProfilePanel />
+                </div>
+            </div>
         </AppLayout>
     );
 }

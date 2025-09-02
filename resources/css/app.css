@@ -1,209 +1,756 @@
 @import 'tailwindcss';
 
-@plugin 'tailwindcss-animate';
+/* Configuración de fuentes robusta */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-@source '../views';
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-
-@custom-variant dark (&:is(.dark *));
-
-@theme {
-    --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-
-    --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-sm: calc(var(--radius) - 4px);
-
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-
-    --color-card: var(--card);
-    --color-card-foreground: var(--card-foreground);
-
-    --color-popover: var(--popover);
-    --color-popover-foreground: var(--popover-foreground);
-
-    --color-primary: var(--primary);
-    --color-primary-foreground: var(--primary-foreground);
-
-    --color-secondary: var(--secondary);
-    --color-secondary-foreground: var(--secondary-foreground);
-
-    --color-muted: var(--muted);
-    --color-muted-foreground: var(--muted-foreground);
-
-    --color-accent: var(--accent);
-    --color-accent-foreground: var(--accent-foreground);
-
-    --color-destructive: var(--destructive);
-    --color-destructive-foreground: var(--destructive-foreground);
-
-    --color-border: var(--border);
-    --color-input: var(--input);
-    --color-ring: var(--ring);
-
-    --color-chart-1: var(--chart-1);
-    --color-chart-2: var(--chart-2);
-    --color-chart-3: var(--chart-3);
-    --color-chart-4: var(--chart-4);
-    --color-chart-5: var(--chart-5);
-
-    --color-sidebar: var(--sidebar);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-ring: var(--sidebar-ring);
+/* Fondo negro por defecto para toda la aplicación */
+html, body {
+    background-color: #000000 !important;
+    background-image: none !important;
+    font-family: 'Inter', 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
+/* Protección del fondo negro del login */
+body.login-page,
+body.register-page,
+body.forgot-password-page {
+    background-color: #000000 !important;
+    background-image: none !important;
+}
 
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-    *,
-    ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+/* Protección específica para páginas de autenticación */
+.auth-layout {
+    background-color: #000000 !important;
+    background-image: none !important;
+}
+
+/* Asegurar que el login mantenga su fondo negro */
+.login-page .threads-background,
+.register-page .threads-background,
+.forgot-password-page .threads-background {
+    background-color: #000000 !important;
+    background-image: none !important;
+}
+
+/* Apple Liquid Sidebar */
+.apple-liquid-sidebar {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.6) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.apple-liquid-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.01) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Apple Liquid Main Header */
+.apple-liquid-main-header {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.6) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.apple-liquid-main-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.01) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Apple Liquid Cards con Bordes Degradados */
+.apple-liquid-card {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 50%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.apple-liquid-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.2) 0%,
+        rgba(255, 255, 255, 0.1) 25%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.1) 75%,
+        rgba(255, 255, 255, 0.2) 100%
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+}
+
+.apple-liquid-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.01) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Apple Liquid Buttons */
+.apple-liquid-button {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 4px 16px 0 rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.apple-liquid-button:hover {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.04) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 6px 20px 0 rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Apple Liquid Inputs */
+.apple-liquid-input {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 50%,
+        rgba(255, 255, 255, 0.02) 100%
+    );
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 2px 8px 0 rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.apple-liquid-input:focus {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(255, 255, 255, 0.03) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 4px 12px 0 rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Apple Liquid Dropdowns */
+.apple-liquid-dropdown {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.8) 50%,
+        rgba(0, 0, 0, 0.7) 100%
+    );
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Transiciones del Sidebar */
+.sidebar-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Orbe flotante */
+.floating-orb {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
     }
 }
 
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+.orb-glow {
+    box-shadow: 
+        0 0 20px rgba(59, 130, 246, 0.5),
+        0 0 40px rgba(59, 130, 246, 0.3),
+        0 0 60px rgba(59, 130, 246, 0.1);
 }
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+/* Efecto de cristal */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-@layer base {
-    * {
-        @apply border-border;
+/* Efecto de hover mejorado para botones */
+.apple-liquid-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.apple-liquid-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.apple-liquid-button:hover::before {
+    left: 100%;
+}
+
+/* Transiciones suaves para el sidebar colapsable */
+.sidebar-collapsible {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-collapsible.collapsed {
+    width: 4rem;
+}
+
+.sidebar-collapsible.expanded {
+    width: 16rem;
+}
+
+/* Animación para el icono T cuando está colapsado */
+.sidebar-icon-t {
+    animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
     }
-
-    body {
-        @apply bg-background text-foreground;
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
     }
 }
 
-/* Typing Animation Effects */
-@keyframes typing-left {
+/* Tooltip para elementos colapsados */
+.sidebar-tooltip {
+    position: relative;
+}
+
+.sidebar-tooltip:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-left: 0.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Estilos para el orbe flotante */
+.floating-orb {
+    animation: orbFloat 3s ease-in-out infinite;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes orbFloat {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Efecto de brillo para el orbe */
+.orb-glow {
+    animation: orbGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes orbGlow {
     0% {
-        width: 0;
-        overflow: hidden;
+        box-shadow: 
+            0 0 20px rgba(59, 130, 246, 0.5),
+            0 0 40px rgba(59, 130, 246, 0.3),
+            0 0 60px rgba(59, 130, 246, 0.1);
     }
     100% {
-        width: 100%;
-        overflow: visible;
+        box-shadow: 
+            0 0 30px rgba(59, 130, 246, 0.7),
+            0 0 60px rgba(59, 130, 246, 0.5),
+            0 0 90px rgba(59, 130, 246, 0.3);
     }
 }
 
-@keyframes typing-right {
-    0% {
-        width: 0;
-        overflow: hidden;
-    }
-    100% {
-        width: 100%;
-        overflow: visible;
-    }
+/* Transición suave para el contenido principal */
+.content-transition {
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes blink {
-    0%, 50% {
-        border-right-color: transparent;
-    }
-    51%, 100% {
-        border-right-color: currentColor;
-    }
+/* Estilos específicos para breadcrumbs en modo Apple Liquid */
+.apple-liquid-breadcrumb {
+    color: rgba(255, 255, 255, 0.9);
 }
 
-.typing-animation-left {
-    display: inline-block;
-    animation: typing-left 8s steps(80, end) infinite, blink 1s infinite;
-    white-space: nowrap;
-    border-right: 2px solid;
+.apple-liquid-breadcrumb-link {
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s ease-in-out;
+}
+
+.apple-liquid-breadcrumb-link:hover {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    margin: -0.25rem -0.5rem;
+}
+
+.apple-liquid-breadcrumb-separator {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Estilos para inputs en modo Apple Liquid */
+.apple-liquid-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.apple-liquid-input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.apple-liquid-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Overlay global para mejorar legibilidad */
+.global-background-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Asegurar que el contenido esté por encima del overlay */
+#app {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Eliminar scroll general y optimizar layout */
+html, body {
+    height: 100%;
     overflow: hidden;
-    max-width: 100%;
 }
 
-.typing-animation-right {
-    display: inline-block;
-    animation: typing-right 8s steps(80, end) infinite 4s, blink 1s infinite;
-    white-space: nowrap;
-    border-right: 2px solid;
+#app {
+    height: 100vh;
     overflow: hidden;
-    max-width: 100%;
+}
+
+/* Layout principal sin scroll */
+.app-layout-container {
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Solo los paneles internos pueden tener scroll */
+.main-content-scroll {
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* Ocultar scrollbar del panel derecho pero mantener funcionalidad */
+.right-panel-scroll {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.right-panel-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+/* Alternativa: scrollbar muy sutil y transparente */
+.right-panel-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.right-panel-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.right-panel-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.right-panel-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.right-panel-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Estilos para el dropdown del toggle de fondo */
+.apple-liquid-dropdown {
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.6) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    ) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.apple-liquid-dropdown::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.01) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Estilos para los items del dropdown */
+.apple-liquid-dropdown [data-radix-collection-item] {
+    background: transparent !important;
+    border: none !important;
+    color: white !important;
+}
+
+.apple-liquid-dropdown [data-radix-collection-item]:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Estilos para el separador */
+.apple-liquid-dropdown [data-radix-separator] {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Estilos específicos para dropdowns del header - mismo efecto que sidebar */
+.apple-liquid-dropdown {
+    /* Mismo gradiente transparente que el sidebar */
+    background: linear-gradient(
+        135deg,
+        rgba(0, 0, 0, 0.6) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    ) !important;
+    
+    /* Mismo backdrop-filter que el sidebar */
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    
+    /* Mismo borde que el sidebar */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    
+    /* Misma sombra que el sidebar */
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Efecto de brillo interno igual que el sidebar */
+.apple-liquid-dropdown::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.03) 0%,
+        rgba(255, 255, 255, 0.01) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+}
+
+/* Items del dropdown con el mismo estilo */
+.apple-liquid-dropdown [data-radix-collection-item] {
+    background: transparent !important;
+    border: none !important;
+    color: white !important;
+    transition: all 0.2s ease !important;
+}
+
+.apple-liquid-dropdown [data-radix-collection-item]:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: translateX(2px) !important;
+}
+
+/* Labels y separadores */
+.apple-liquid-dropdown [data-radix-label] {
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.apple-liquid-dropdown [data-radix-separator] {
+    background: rgba(255, 255, 255, 0.2) !important;
+    height: 1px !important;
+}
+
+/* Ocultar todos los scrollbars pero mantener funcionalidad */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    display: none;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: none;
+}
+
+/* IE/Edge */
+* {
+    -ms-overflow-style: none;
+}
+
+/* Aplicar a elementos específicos que necesiten scroll */
+.scrollable-content {
+    overflow: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scrollable-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* Asegurar que el scroll funcione en todos los elementos */
+html, body, div, section, main, aside {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+div::-webkit-scrollbar,
+section::-webkit-scrollbar,
+main::-webkit-scrollbar,
+aside::-webkit-scrollbar {
+    display: none;
+}
+
+/* Ocultar scrollbars globalmente pero mantener funcionalidad */
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+    display: none;
+}
+
+/* Estilos para el componente Select de Shadcn UI */
+[data-radix-popper-content-wrapper] {
+    z-index: 9999 !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-content] {
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
+    color: white !important;
+    padding: 4px !important;
+    min-width: 8rem !important;
+    overflow: hidden !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-item] {
+    position: relative !important;
+    display: flex !important;
+    cursor: default !important;
+    user-select: none !important;
+    align-items: center !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    outline: none !important;
+    color: white !important;
+    background: transparent !important;
+    transition: background-color 0.2s ease !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-item]:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-item][data-highlighted] {
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-item][data-state="checked"] {
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: white !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-separator] {
+    height: 1px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    margin: 4px 0 !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-label] {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-group] {
+    padding: 4px 0 !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-group-label] {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-viewport] {
+    padding: 4px !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-scroll-up-button],
+[data-radix-popper-content-wrapper] [data-radix-select-scroll-down-button] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 25px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    cursor: default !important;
+}
+
+[data-radix-popper-content-wrapper] [data-radix-select-scroll-up-button]:hover,
+[data-radix-popper-content-wrapper] [data-radix-select-scroll-down-button]:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
 }

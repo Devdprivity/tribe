@@ -57,6 +57,14 @@ class Comment extends Model
         return $this->hasMany(Comment::class, 'parent_id');
     }
 
+    /**
+     * Likes del comentario
+     */
+    public function likes(): HasMany
+    {
+        return $this->hasMany(CommentLike::class);
+    }
+
     // Scopes
 
     /**
@@ -188,13 +196,49 @@ class Comment extends Model
     /**
      * Obtener comentarios con respuestas para un post
      */
-    public static function getThreadedComments(int $postId)
+    public static function getThreadedComments(int $postId, ?int $currentUserId = null)
     {
-        return static::where('post_id', $postId)
+        $comments = static::where('post_id', $postId)
                     ->whereNull('parent_id')
-                    ->with(['user', 'replies.user', 'replies.replies'])
+                    ->with([
+                        'user', 
+                        'replies.user', 
+                        'replies.replies',
+                        'likes' => function($query) use ($currentUserId) {
+                            if ($currentUserId) {
+                                $query->where('user_id', $currentUserId);
+                            }
+                        }
+                    ])
                     ->orderBy('created_at', 'desc')
                     ->get();
+
+        // Agregar información de likes y si el usuario actual dio like
+        $comments->each(function ($comment) use ($currentUserId) {
+            $comment->likes_count = $comment->likes()->count();
+            $comment->is_liked = $currentUserId ? $comment->likes()->where('user_id', $currentUserId)->exists() : false;
+            $comment->is_own = $currentUserId ? $comment->user_id === $currentUserId : false;
+            
+            // Procesar respuestas recursivamente
+            if ($comment->replies) {
+                $comment->replies->each(function ($reply) use ($currentUserId) {
+                    $reply->likes_count = $reply->likes()->count();
+                    $reply->is_liked = $currentUserId ? $reply->likes()->where('user_id', $currentUserId)->exists() : false;
+                    $reply->is_own = $currentUserId ? $reply->user_id === $currentUserId : false;
+                    
+                    // Procesar respuestas de respuestas
+                    if ($reply->replies) {
+                        $reply->replies->each(function ($subReply) use ($currentUserId) {
+                            $subReply->likes_count = $subReply->likes()->count();
+                            $subReply->is_liked = $currentUserId ? $subReply->likes()->where('user_id', $currentUserId)->exists() : false;
+                            $subReply->is_own = $currentUserId ? $subReply->user_id === $currentUserId : false;
+                        });
+                    }
+                });
+            }
+        });
+
+        return $comments;
     }
 
     /**

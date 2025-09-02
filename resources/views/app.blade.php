@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -19,32 +20,48 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
+        {{-- Inline style to set the HTML background color to black by default --}}
         <style>
             html {
-                background-color: oklch(1 0 0);
+                background-color: #000000 !important;
+                background-image: none !important;
             }
 
             html.dark {
-                background-color: oklch(0.145 0 0);
+                background-color: #000000 !important;
+                background-image: none !important;
+            }
+            
+            body {
+                background-color: #000000 !important;
+                background-image: none !important;
             }
         </style>
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/apple-touch-icon.png" sizes="any">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="shortcut icon" href="/apple-touch-icon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+        
+        {{-- Fallback fonts para evitar errores 404 --}}
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            
+            body {
+                font-family: 'Inter', 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            }
+        </style>
 
         @routes
         @viteReactRefresh
         @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         @inertiaHead
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased" data-turbo-suppress-warning>
         @inertia
     </body>
 </html>

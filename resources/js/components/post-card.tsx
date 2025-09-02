@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Link } from '@inertiajs/react';
+import { formatTimeAgo } from '@/utils/time-format';
 import {
     Heart,
     MessageCircle,
@@ -20,6 +21,10 @@ import {
     Eye,
     Bookmark
 } from 'lucide-react';
+import PostReactions from './post-reactions';
+
+import SpecializedPost from './specialized-post';
+import { useComments } from '@/contexts/comments-context';
 
 interface User {
     id: number;
@@ -33,10 +38,14 @@ interface User {
 interface Post {
     id: number;
     content: string;
-    type: 'text' | 'image' | 'video' | 'code' | 'project';
+    type: 'text' | 'image' | 'video' | 'code' | 'project' | 'code_snippet' | 'project_showcase' | 'tech_tutorial' | 'problem_solution' | 'code_playground';
     code_language?: string;
     media_urls?: string[];
     likes_count: number;
+    fire_count: number;
+    idea_count: number;
+    bug_count: number;
+    sparkle_count: number;
     comments_count: number;
     shares_count: number;
     views_count?: number;
@@ -45,10 +54,13 @@ interface Post {
     created_at: string;
     user: User;
     hashtags?: string[];
+    user_reaction?: string | null;
+    specialized_data?: any; // Datos específicos para posts especializados
 }
 
 interface PostCardProps {
     post: Post;
+    currentUser: User;
     showActions?: boolean;
     compact?: boolean;
 }
@@ -72,27 +84,13 @@ const getPostTypeIcon = (type: string) => {
     }
 };
 
-const formatTimeAgo = (date: string) => {
-    const now = new Date();
-    const postDate = new Date(date);
-    const diffInMs = now.getTime() - postDate.getTime();
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-
-    if (diffInHours < 1) return 'Hace unos minutos';
-    if (diffInHours < 24) return `Hace ${diffInHours}h`;
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `Hace ${diffInDays}d`;
-
-    return postDate.toLocaleDateString();
-};
-
-export default function PostCard({ post, showActions = true, compact = false }: PostCardProps) {
+export default function PostCard({ post, currentUser, showActions = true, compact = false }: PostCardProps) {
     const TypeIcon = getPostTypeIcon(post.type);
+    const { openCommentsModal } = useComments();
 
     return (
-        <Card className={`${compact ? 'mb-2' : 'mb-4'} hover:shadow-md transition-shadow`}>
-            <CardHeader className={compact ? 'pb-2' : 'pb-3'}>
+        <Card className={`apple-liquid-card border border-white/20 ${compact ? 'mb-2' : 'mb-4'} hover:shadow-md transition-shadow`}>
+            <CardHeader className={`${compact ? 'pb-2' : 'pb-3'} text-white`}>
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                         <Link href={`/users/${post.user.id}`}>
@@ -105,19 +103,19 @@ export default function PostCard({ post, showActions = true, compact = false }: 
                         </Link>
                         <div className="flex-1">
                             <div className="flex items-center gap-2">
-                                <Link href={`/users/${post.user.id}`} className="font-semibold hover:underline">
+                                <Link href={`/users/${post.user.id}`} className="font-semibold hover:underline text-white">
                                     {post.user.full_name}
                                 </Link>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-xs bg-white/10 border-white/20 text-white">
                                     {post.user.level}
                                 </Badge>
                                 {post.user.is_open_to_work && (
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge variant="secondary" className="text-xs bg-green-500/20 border-green-400/50 text-green-300">
                                         Disponible
                                     </Badge>
                                 )}
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2 text-sm text-white/70">
                                 <span>@{post.user.username}</span>
                                 <span>•</span>
                                 <span>{formatTimeAgo(post.created_at)}</span>
@@ -132,28 +130,36 @@ export default function PostCard({ post, showActions = true, compact = false }: 
                     </div>
                     <div className="flex items-center gap-2">
                         {post.is_pinned && (
-                            <Pin className="h-4 w-4 text-muted-foreground" />
+                            <Pin className="h-4 w-4 text-white/70" />
                         )}
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
             </CardHeader>
 
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 text-white">
                 <div className="space-y-3">
                     {/* Contenido del post */}
                     <div className="whitespace-pre-wrap">
-                        <Link href={`/posts/${post.id}`} className="block hover:opacity-80 transition-opacity">
-                            {post.type === 'code' ? (
-                                <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-                                    <code className="text-sm">{post.content}</code>
-                                </pre>
-                            ) : (
-                                <p className={compact ? 'line-clamp-2' : 'line-clamp-4'}>{post.content}</p>
-                            )}
-                        </Link>
+                        {/* Posts especializados */}
+                        {['code_snippet', 'project_showcase', 'tech_tutorial', 'problem_solution', 'code_playground'].includes(post.type) ? (
+                            <SpecializedPost 
+                                type={post.type as any} 
+                                data={post.specialized_data || {}} 
+                            />
+                        ) : (
+                            <Link href={`/posts/${post.id}`} className="block hover:opacity-80 transition-opacity">
+                                {post.type === 'code' ? (
+                                    <pre className="bg-black/30 border border-white/20 p-4 rounded-lg overflow-x-auto">
+                                        <code className="text-sm text-white">{post.content}</code>
+                                    </pre>
+                                ) : (
+                                    <p className={`text-white ${compact ? 'line-clamp-2' : 'line-clamp-4'}`}>{post.content}</p>
+                                )}
+                            </Link>
+                        )}
                     </div>
 
                     {/* Hashtags */}
@@ -163,7 +169,7 @@ export default function PostCard({ post, showActions = true, compact = false }: 
                                 <Link
                                     key={index}
                                     href={`/posts?hashtag=${hashtag}`}
-                                    className="text-primary hover:underline text-sm"
+                                    className="text-blue-400 hover:underline text-sm"
                                 >
                                     #{hashtag}
                                 </Link>
@@ -183,7 +189,7 @@ export default function PostCard({ post, showActions = true, compact = false }: 
                                 />
                             ))}
                             {post.media_urls.length > 2 && (
-                                <div className="text-center text-sm text-muted-foreground">
+                                <div className="text-center text-sm text-white/70">
                                     +{post.media_urls.length - 2} más
                                 </div>
                             )}
@@ -192,7 +198,7 @@ export default function PostCard({ post, showActions = true, compact = false }: 
 
                     {/* Estadísticas */}
                     {post.views_count && (
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-white/70">
                             <div className="flex items-center gap-1">
                                 <Eye className="h-4 w-4" />
                                 <span>{post.views_count}</span>
@@ -210,27 +216,44 @@ export default function PostCard({ post, showActions = true, compact = false }: 
 
                     {showActions && (
                         <>
-                            <Separator />
+                            <Separator className="bg-white/20" />
 
-                            {/* Acciones del post */}
+                            {/* Sistema de reacciones y acciones */}
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-6">
-                                    <Button variant="ghost" size="sm" className="gap-2">
-                                        <Heart className="h-4 w-4" />
-                                        <span>{post.likes_count}</span>
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="gap-2">
+                                {/* Reacciones */}
+                                <PostReactions
+                                    postId={post.id}
+                                    currentUserId={currentUser.id}
+                                    initialReactions={{
+                                        likes_count: post.likes_count,
+                                        fire_count: post.fire_count || 0,
+                                        idea_count: post.idea_count || 0,
+                                        bug_count: post.bug_count || 0,
+                                        sparkle_count: post.sparkle_count || 0,
+                                    }}
+                                    userReaction={post.user_reaction}
+                                    onReactionChange={() => {
+                                        // Callback para actualizar el post si es necesario
+                                    }}
+                                />
+
+                                {/* Acciones adicionales */}
+                                <div className="flex items-center gap-2">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-white/70 hover:text-white hover:bg-white/10 apple-liquid-button rounded-full w-8 h-8 p-0"
+                                        onClick={() => openCommentsModal(post)}
+                                    >
                                         <MessageCircle className="h-4 w-4" />
-                                        <span>Comentar</span>
                                     </Button>
-                                    <Button variant="ghost" size="sm" className="gap-2">
+                                    <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 apple-liquid-button rounded-full w-8 h-8 p-0">
                                         <Share2 className="h-4 w-4" />
-                                        <span>Compartir</span>
                                     </Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`gap-2 ${post.is_bookmarked ? 'text-primary' : ''}`}
+                                        className={`apple-liquid-button rounded-full w-8 h-8 p-0 ${post.is_bookmarked ? 'text-blue-400' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
                                         onClick={async () => {
                                             try {
                                                 const response = await fetch(`/bookmarks/posts/${post.id}`, {
@@ -250,28 +273,13 @@ export default function PostCard({ post, showActions = true, compact = false }: 
                                         }}
                                     >
                                         <Bookmark className={`h-4 w-4 ${post.is_bookmarked ? 'fill-current' : ''}`} />
-                                        <span>Guardar</span>
-                                    </Button>
-                                </div>
-
-                                {/* Reacciones específicas para devs */}
-                                <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="sm" className="p-2">
-                                        <Flame className="h-4 w-4 text-orange-500" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="p-2">
-                                        <Lightbulb className="h-4 w-4 text-yellow-500" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="p-2">
-                                        <Bug className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="p-2">
-                                        <Sparkles className="h-4 w-4 text-purple-500" />
                                     </Button>
                                 </div>
                             </div>
                         </>
                     )}
+
+
                 </div>
             </CardContent>
         </Card>

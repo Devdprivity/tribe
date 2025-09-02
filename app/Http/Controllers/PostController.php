@@ -28,11 +28,24 @@ class PostController extends Controller
             ->latest()
             ->paginate(10);
 
-        // Agregar información de favoritos si el usuario está autenticado
+        // Agregar información de favoritos y reacciones si el usuario está autenticado
         if (Auth::check()) {
             $user = Auth::user();
             $posts->getCollection()->transform(function ($post) use ($user) {
                 $post->is_bookmarked = $user->bookmarkedPosts()->where('post_id', $post->id)->exists();
+                
+                // Agregar información de reacciones
+                $post->fire_count = $post->getLikesCountByType('fire');
+                $post->idea_count = $post->getLikesCountByType('idea');
+                $post->bug_count = $post->getLikesCountByType('bug');
+                $post->sparkle_count = $post->getLikesCountByType('sparkle');
+                
+                // Verificar si el usuario actual dio like y qué tipo
+                $userLike = PostLike::where('post_id', $post->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+                $post->user_reaction = $userLike ? $userLike->type : null;
+                
                 return $post;
             });
         }
@@ -215,7 +228,21 @@ class PostController extends Controller
             $action = 'added';
         }
 
-        return back()->with('success', "¡Like {$action}!");
+        // Obtener conteos actualizados
+        $likesCount = [
+            'like' => $post->getLikesCountByType('like'),
+            'fire' => $post->getLikesCountByType('fire'),
+            'idea' => $post->getLikesCountByType('idea'),
+            'bug' => $post->getLikesCountByType('bug'),
+            'sparkle' => $post->getLikesCountByType('sparkle'),
+        ];
+
+        return response()->json([
+            'action' => $action,
+            'type' => $type,
+            'likes_count' => $likesCount,
+            'user_reaction' => $action === 'added' ? $type : null
+        ]);
     }
 
     /**
@@ -252,9 +279,22 @@ class PostController extends Controller
             ->latest()
             ->paginate(10);
 
-        // Agregar información de favoritos
+        // Agregar información de favoritos y reacciones
         $posts->getCollection()->transform(function ($post) use ($user) {
             $post->is_bookmarked = $user->bookmarkedPosts()->where('post_id', $post->id)->exists();
+            
+            // Agregar información de reacciones
+            $post->fire_count = $post->getLikesCountByType('fire');
+            $post->idea_count = $post->getLikesCountByType('idea');
+            $post->bug_count = $post->getLikesCountByType('bug');
+            $post->sparkle_count = $post->getLikesCountByType('sparkle');
+            
+            // Verificar si el usuario actual dio like y qué tipo
+            $userLike = PostLike::where('post_id', $post->id)
+                ->where('user_id', $user->id)
+                ->first();
+            $post->user_reaction = $userLike ? $userLike->type : null;
+            
             return $post;
         });
 

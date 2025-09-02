@@ -45,12 +45,16 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'theme_preference' => $request->user()?->theme_preference ?? 'dark',
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            // Onboarding flags from session
+            'force_onboarding' => session('force_onboarding', false),
+            'clear_onboarding_storage' => session('clear_onboarding_storage', false),
         ];
     }
 }

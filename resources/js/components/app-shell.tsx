@@ -6,7 +6,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
     return (
-        <div className="flex min-h-screen w-full">
+        <div className="flex h-full w-full">
             {children}
         </div>
     );

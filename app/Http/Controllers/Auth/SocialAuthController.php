@@ -44,7 +44,19 @@ class SocialAuthController extends Controller
         try {
             $this->validateProvider($provider);
 
-            $socialiteUser = Socialite::driver($provider)->user();
+            // Configure SSL options for Guzzle
+            $driver = Socialite::driver($provider);
+            if (method_exists($driver, 'setHttpClient')) {
+                $guzzleConfig = [
+                    'verify' => env('SSL_CERT_FILE', 'C:\\tools\\php84\\cacert.pem'),
+                    'timeout' => 30,
+                    'connect_timeout' => 10,
+                ];
+                $httpClient = new \GuzzleHttp\Client($guzzleConfig);
+                $driver->setHttpClient($httpClient);
+            }
+
+            $socialiteUser = $driver->user();
 
             // Validate required data
             if (empty($socialiteUser->getEmail())) {
@@ -53,7 +65,7 @@ class SocialAuthController extends Controller
             }
 
             // Create or update user
-            $user = User::createOrUpdateFromProvider($provider, [
+            $result = User::createOrUpdateFromProvider($provider, [
                 'id' => $socialiteUser->getId(),
                 'email' => $socialiteUser->getEmail(),
                 'name' => $socialiteUser->getName(),
@@ -61,6 +73,17 @@ class SocialAuthController extends Controller
                 'avatar' => $socialiteUser->getAvatar(),
                 'user' => $socialiteUser->user ?? null, // Raw provider data
             ]);
+            
+            $user = $result['user'];
+            $isNewUser = $result['isNewUser'];
+
+            // Update provider avatar if it has changed
+            $currentAvatar = $user->provider_avatar;
+            $newAvatar = $socialiteUser->getAvatar();
+            
+            if ($newAvatar && $newAvatar !== $currentAvatar) {
+                $user->updateProviderAvatar($newAvatar);
+            }
 
             // Update last login
             $user->updateLastLogin();
@@ -68,11 +91,27 @@ class SocialAuthController extends Controller
             // Log the user in
             Auth::login($user, true);
 
-            // Redirect to intended destination or dashboard
-            $redirectTo = session()->pull('url.intended', route('dashboard'));
+            // Handle new user onboarding
+            if ($isNewUser) {
+                // Set default theme preference for new users
+                $user->update(['theme_preference' => 'dark']);
+                
+                // Store flag in session to trigger onboarding
+                session(['force_onboarding' => true]);
+                
+                // Clear any existing onboarding completion flag
+                session(['clear_onboarding_storage' => true]);
+            }
+
+            // Redirect to intended destination or timeline
+            $redirectTo = session()->pull('url.intended', route('timeline.redirect'));
+
+            $welcomeMessage = $isNewUser 
+                ? '¡Bienvenido a Tribe! Completemos tu perfil para comenzar.' 
+                : '¡Bienvenido de vuelta! Te has autenticado exitosamente con ' . ucfirst($provider) . '.';
 
             return redirect()->to($redirectTo)
-                ->with('success', '¡Bienvenido a Tribe! Te has autenticado exitosamente con ' . ucfirst($provider) . '.');
+                ->with('success', $welcomeMessage);
 
         } catch (Throwable $e) {
             Log::error("Social auth callback error for {$provider}: " . $e->getMessage(), [

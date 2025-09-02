@@ -22,11 +22,7 @@ const sidebarNavItems: NavItem[] = [
         href: '/settings/social',
         icon: null,
     },
-    {
-        title: 'Appearance',
-        href: '/settings/appearance',
-        icon: null,
-    },
+ 
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
@@ -38,11 +34,11 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const currentPath = window.location.pathname;
 
     return (
-        <div className="px-4 py-6">
+        <div className="w-full max-w-7xl mx-auto px-4 py-6">
             <Heading title="Settings" description="Manage your profile and account settings" />
 
             <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
+                <aside className="w-full max-w-xs lg:w-64 flex-shrink-0">
                     <nav className="flex flex-col space-y-1 space-x-0">
                         {sidebarNavItems.map((item, index) => (
                             <Button
@@ -50,8 +46,9 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': currentPath === item.href,
+                                className={cn('w-full justify-start text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/20 rounded-lg apple-liquid-button transition-all duration-200', {
+                                    'bg-white/20 text-white border-white/30': currentPath === item.href,
+                                    'bg-white/5 text-white/80': currentPath !== item.href,
                                 })}
                             >
                                 <Link href={item.href} prefetch>
@@ -62,10 +59,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     </nav>
                 </aside>
 
-                <Separator className="my-6 md:hidden" />
+                <Separator className="my-6 md:hidden bg-white/20" />
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">{children}</section>
+                <div className="flex-1 min-w-0">
+                    <section className="w-full max-w-none space-y-12">{children}</section>
                 </div>
             </div>
         </div>

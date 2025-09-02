@@ -2,27 +2,37 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Fragment } from 'react';
+import { ChevronRight } from 'lucide-react';
 
 export function Breadcrumbs({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[] }) {
     return (
         <>
             {breadcrumbs.length > 0 && (
                 <Breadcrumb>
-                    <BreadcrumbList>
+                    <BreadcrumbList className="apple-liquid-breadcrumb">
                         {breadcrumbs.map((item, index) => {
                             const isLast = index === breadcrumbs.length - 1;
                             return (
                                 <Fragment key={index}>
                                     <BreadcrumbItem>
                                         {isLast ? (
-                                            <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                                            <BreadcrumbPage className="text-white font-semibold">{item.title}</BreadcrumbPage>
                                         ) : (
                                             <BreadcrumbLink asChild>
-                                                <Link href={item.href}>{item.title}</Link>
+                                                <Link 
+                                                    href={item.href}
+                                                    className="apple-liquid-breadcrumb-link"
+                                                >
+                                                    {item.title}
+                                                </Link>
                                             </BreadcrumbLink>
                                         )}
                                     </BreadcrumbItem>
-                                    {!isLast && <BreadcrumbSeparator />}
+                                    {!isLast && (
+                                        <BreadcrumbSeparator className="apple-liquid-breadcrumb-separator">
+                                            <ChevronRight />
+                                        </BreadcrumbSeparator>
+                                    )}
                                 </Fragment>
                             );
                         })}

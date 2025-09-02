@@ -162,33 +162,18 @@ export function NotificationsPanel() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="p-4 space-y-4">
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Bell className="h-5 w-5" />
-                            Notificaciones
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                            <p className="text-sm text-muted-foreground mt-2">Cargando...</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
+    const handleNotificationClick = (notification: Notification) => {
+        if (notification.link) {
+            window.location.href = notification.link;
+        }
+    };
 
     return (
         <div className="p-4 space-y-4">
-            <Card>
+            <Card className="apple-liquid-card">
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
+                        <CardTitle className="text-lg flex items-center gap-2 text-white">
                             <Bell className="h-5 w-5" />
                             Notificaciones
                             {unreadCount > 0 && (
@@ -198,9 +183,10 @@ export function NotificationsPanel() {
                             )}
                         </CardTitle>
                         <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => window.location.href = '/notifications'}
+                            className="text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/20 rounded-lg apple-liquid-button"
                         >
                             Ver todas
                         </Button>
@@ -208,76 +194,76 @@ export function NotificationsPanel() {
                 </CardHeader>
 
                 <CardContent className="space-y-3">
-                    {notifications.length > 0 ? (
-                        notifications.map((notification) => (
+                    {loading ? (
+                        <div className="text-center py-6">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/30 mx-auto mb-2"></div>
+                            <p className="text-white/70 text-sm">Cargando...</p>
+                        </div>
+                    ) : notifications.length === 0 ? (
+                        <div className="text-center py-8">
+                            <Bell className="h-12 w-12 text-white/30 mx-auto mb-3" />
+                            <p className="text-white/70 text-sm">No tienes notificaciones</p>
+                        </div>
+                    ) : (
+                        notifications.slice(0, 5).map((notif) => (
                             <div
-                                key={notification.id}
-                                className={`p-3 rounded-lg border transition-colors ${
-                                    getNotificationColor(notification.type, notification.read)
+                                key={notif.id}
+                                className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer ${
+                                    notif.read
+                                        ? 'bg-white/5 border-white/10 hover:bg-white/10'
+                                        : 'bg-white/10 border-white/20 hover:bg-white/15'
                                 }`}
+                                onClick={() => handleNotificationClick(notif)}
                             >
                                 <div className="flex items-start gap-3">
-                                    <div className="flex-shrink-0">
-                                        {notification.from_user ? (
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={notification.from_user.avatar} />
-                                                <AvatarFallback>
-                                                    {notification.from_user.full_name.charAt(0)}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                        ) : (
-                                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                                {getNotificationIcon(notification.type)}
-                                            </div>
-                                        )}
+                                    <div className="flex-shrink-0 mt-1">
+                                        {getNotificationIcon(notif.type)}
                                     </div>
-
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium">
-                                                    {notification.title}
-                                                </p>
-                                                <p className="text-sm text-muted-foreground mt-1">
-                                                    {notification.message}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    {formatTimeAgo(notification.created_at)}
-                                                </p>
-                                            </div>
-
-                                            <div className="flex items-center gap-1 ml-2">
-                                                {!notification.read && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => markAsRead(notification.id)}
-                                                        className="h-6 w-6 p-0"
-                                                    >
-                                                        <Check className="h-3 w-3" />
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => deleteNotification(notification.id)}
-                                                    className="h-6 w-6 p-0"
-                                                >
-                                                    <X className="h-3 w-3" />
-                                                </Button>
-                                            </div>
+                                        <p className={`text-sm font-medium mb-1 ${
+                                            notif.read ? 'text-white/80' : 'text-white'
+                                        }`}>
+                                            {notif.title}
+                                        </p>
+                                        <p className="text-xs text-white/70 mb-2 line-clamp-2">
+                                            {notif.message}
+                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-white/50">
+                                                {formatTimeAgo(notif.created_at)}
+                                            </span>
+                                            {!notif.read && (
+                                                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                            )}
                                         </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                markAsRead(notif.id);
+                                            }}
+                                            className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+                                        >
+                                            <Check className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteNotification(notif.id);
+                                            }}
+                                            className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
                         ))
-                    ) : (
-                        <div className="text-center py-8">
-                            <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                                No tienes notificaciones
-                            </p>
-                        </div>
                     )}
                 </CardContent>
             </Card>

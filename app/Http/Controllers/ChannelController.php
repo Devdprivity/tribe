@@ -338,4 +338,34 @@ class ChannelController extends Controller
 
         return response()->json($channels);
     }
+
+    /**
+     * Get user's favorite channels
+     */
+    public function favorites()
+    {
+        if (!Auth::check()) {
+            return response()->json(['channels' => []]);
+        }
+
+        $favoriteChannels = Channel::whereHas('members', function ($query) {
+            $query->where('user_id', Auth::id());
+        })
+        ->withCount('members as members_count')
+        ->orderBy('members_count', 'desc')
+        ->limit(10)
+        ->get()
+        ->map(function ($channel) {
+            return [
+                'id' => $channel->id,
+                'name' => $channel->name,
+                'slug' => $channel->slug,
+                'type' => $channel->type,
+                'members_count' => $channel->members_count,
+                'is_online' => true, // Por defecto, asumimos que está activo
+            ];
+        });
+
+        return response()->json(['channels' => $favoriteChannels]);
+    }
 }

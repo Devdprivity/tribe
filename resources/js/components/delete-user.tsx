@@ -31,21 +31,23 @@ export default function DeleteUser() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-md">
             <HeadingSmall title="Delete account" description="Delete your account and all of its resources" />
-            <div className="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10">
-                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
+            <div className="space-y-4 rounded-xl border border-red-200/20 bg-red-500/10 p-4 backdrop-blur-sm">
+                <div className="relative space-y-0.5 text-red-300">
                     <p className="font-medium">Warning</p>
                     <p className="text-sm">Please proceed with caution, this cannot be undone.</p>
                 </div>
 
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="destructive">Delete account</Button>
+                        <Button variant="destructive" className="bg-red-500/80 hover:bg-red-500 text-white border-red-400/50 shadow-lg shadow-red-500/25 rounded-xl apple-liquid-button">
+                            Delete account
+                        </Button>
                     </DialogTrigger>
-                    <DialogContent>
-                        <DialogTitle>Are you sure you want to delete your account?</DialogTitle>
-                        <DialogDescription>
+                    <DialogContent className="bg-white/10 backdrop-blur-xl border border-white/20">
+                        <DialogTitle className="text-white">Are you sure you want to delete your account?</DialogTitle>
+                        <DialogDescription className="text-white/80">
                             Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password
                             to confirm you would like to permanently delete your account.
                         </DialogDescription>
@@ -64,6 +66,7 @@ export default function DeleteUser() {
                                     onChange={(e) => setData('password', e.target.value)}
                                     placeholder="Password"
                                     autoComplete="current-password"
+                                    className="bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
                                 />
 
                                 <InputError message={errors.password} />
@@ -71,12 +74,12 @@ export default function DeleteUser() {
 
                             <DialogFooter className="gap-2">
                                 <DialogClose asChild>
-                                    <Button variant="secondary" onClick={closeModal}>
+                                    <Button variant="secondary" onClick={closeModal} className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30 rounded-lg apple-liquid-button">
                                         Cancel
                                     </Button>
                                 </DialogClose>
 
-                                <Button variant="destructive" disabled={processing} asChild>
+                                <Button variant="destructive" disabled={processing} asChild className="bg-red-500/80 hover:bg-red-500 text-white border-red-400/50 shadow-lg shadow-red-500/25 rounded-lg apple-liquid-button">
                                     <button type="submit">Delete account</button>
                                 </Button>
                             </DialogFooter>

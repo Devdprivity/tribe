@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 
 export type Appearance = 'light' | 'dark' | 'system';
 
@@ -38,8 +40,9 @@ const handleSystemThemeChange = () => {
     applyTheme(currentAppearance || 'system');
 };
 
-export function initializeTheme() {
-    const savedAppearance = (localStorage.getItem('appearance') as Appearance) || 'system';
+export function initializeTheme(userThemePreference?: Appearance) {
+    // Use user preference if available, otherwise fallback to localStorage, then 'dark'
+    const savedAppearance = userThemePreference || (localStorage.getItem('appearance') as Appearance) || 'dark';
 
     applyTheme(savedAppearance);
 
@@ -48,7 +51,9 @@ export function initializeTheme() {
 }
 
 export function useAppearance() {
-    const [appearance, setAppearance] = useState<Appearance>('system');
+    const { props } = usePage<{ auth: { user: any; theme_preference: Appearance } }>();
+    const userThemePreference = props.auth.theme_preference || 'dark';
+    const [appearance, setAppearance] = useState<Appearance>(userThemePreference);
 
     const updateAppearance = useCallback((mode: Appearance) => {
         setAppearance(mode);
@@ -60,14 +65,25 @@ export function useAppearance() {
         setCookie('appearance', mode);
 
         applyTheme(mode);
-    }, []);
+
+        // Update user preference in database if user is authenticated
+        if (props.auth.user) {
+            router.patch('/user/theme-preference', { theme_preference: mode }, {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['auth'],
+            });
+        }
+    }, [props.auth.user]);
 
     useEffect(() => {
-        const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-        updateAppearance(savedAppearance || 'system');
+        // Use user preference from backend, fallback to localStorage, then 'dark'
+        const initialTheme = userThemePreference || (localStorage.getItem('appearance') as Appearance) || 'dark';
+        setAppearance(initialTheme);
+        applyTheme(initialTheme);
 
         return () => mediaQuery()?.removeEventListener('change', handleSystemThemeChange);
-    }, [updateAppearance]);
+    }, [userThemePreference]);
 
     return { appearance, updateAppearance } as const;
 }

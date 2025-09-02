@@ -57,8 +57,8 @@ export default function Password() {
                     <HeadingSmall title="Update password" description="Ensure your account is using a long, random password to stay secure" />
 
                     <form onSubmit={updatePassword} className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="current_password">Current password</Label>
+                        <div className="grid gap-2 max-w-md">
+                            <Label htmlFor="current_password" className="text-white font-medium">Current password</Label>
 
                             <Input
                                 id="current_password"
@@ -66,7 +66,7 @@ export default function Password() {
                                 value={data.current_password}
                                 onChange={(e) => setData('current_password', e.target.value)}
                                 type="password"
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
                                 autoComplete="current-password"
                                 placeholder="Current password"
                             />
@@ -74,8 +74,8 @@ export default function Password() {
                             <InputError message={errors.current_password} />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password">New password</Label>
+                        <div className="grid gap-2 max-w-md">
+                            <Label htmlFor="password" className="text-white font-medium">New password</Label>
 
                             <Input
                                 id="password"
@@ -83,7 +83,7 @@ export default function Password() {
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                                 type="password"
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
                                 autoComplete="new-password"
                                 placeholder="New password"
                             />
@@ -91,15 +91,15 @@ export default function Password() {
                             <InputError message={errors.password} />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="password_confirmation">Confirm password</Label>
+                        <div className="grid gap-2 max-w-md">
+                            <Label htmlFor="password_confirmation" className="text-white font-medium">Confirm password</Label>
 
                             <Input
                                 id="password_confirmation"
                                 value={data.password_confirmation}
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
                                 type="password"
-                                className="mt-1 block w-full"
+                                className="mt-1 block w-full bg-white/5 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 focus:ring-white/20"
                                 autoComplete="new-password"
                                 placeholder="Confirm password"
                             />
@@ -108,7 +108,12 @@ export default function Password() {
                         </div>
 
                         <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save password</Button>
+                            <Button 
+                                disabled={processing} 
+                                className="bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25 rounded-xl apple-liquid-button"
+                            >
+                                Save password
+                            </Button>
 
                             <Transition
                                 show={recentlySuccessful}
@@ -117,7 +122,7 @@ export default function Password() {
                                 leave="transition ease-in-out"
                                 leaveTo="opacity-0"
                             >
-                                <p className="text-sm text-neutral-600">Saved</p>
+                                <p className="text-sm text-green-400 bg-green-500/20 rounded-lg px-3 py-2 border border-green-400/30">Saved</p>
                             </Transition>
                         </div>
                     </form>

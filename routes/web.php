@@ -11,20 +11,29 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\StoryController;
+use App\Http\Controllers\StoryLikeController;
 
 Route::get('/', function () {
-    return Auth::check() ? redirect()->route('dashboard') : redirect()->route('login');
+    return Auth::check() ? redirect()->route('timeline.redirect') : redirect()->route('login');
 })->name('home');
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Timeline as main page
     Route::get('timeline', [PostController::class, 'timeline'])->name('posts.timeline');
+    
+    // Clear onboarding flags
+    Route::post('clear-onboarding-flags', function () {
+        session()->forget(['force_onboarding', 'clear_onboarding_storage']);
+        return response()->json(['success' => true]);
+    })->name('clear.onboarding.flags');
+    
+    // Test onboarding flow (only in development)
+    if (app()->environment('local')) {
+        Route::get('test-onboarding', function () {
+            return response()->file(base_path('test-onboarding-flow.html'));
+        })->name('test.onboarding');
+    }
 
     // Posts Routes
     Route::resource('posts', PostController::class);
@@ -41,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('channels/{channel}/role', [ChannelController::class, 'updateUserRole'])->name('channels.role');
     Route::get('channels/{channel}/members', [ChannelController::class, 'members'])->name('channels.members');
     Route::get('api/channels/search', [ChannelController::class, 'search'])->name('channels.search');
+    Route::get('api/channels/favorites', [ChannelController::class, 'favorites'])->name('channels.favorites');
 
     // Jobs Routes
     Route::get('my-applications', [JobController::class, 'myApplications'])->name('jobs.my-applications');
@@ -55,6 +65,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('comments', CommentController::class)->only(['store', 'show', 'update', 'destroy']);
     Route::get('posts/{post}/comments', [CommentController::class, 'getByPost'])->name('comments.by-post');
     Route::get('comments/{comment}/replies', [CommentController::class, 'getReplies'])->name('comments.replies');
+    Route::post('comments/{comment}/like', [CommentController::class, 'toggleLike'])->name('comments.like');
+    Route::get('api/posts/{post}/comments', [CommentController::class, 'getByPost'])->name('api.comments.by-post');
+    Route::post('api/comments', [CommentController::class, 'store'])->name('api.comments.store');
 
     // Users Routes
     Route::resource('users', UserController::class)->only(['index', 'show', 'edit', 'update']);
@@ -87,6 +100,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('bookmarks/posts/{post}', [BookmarkController::class, 'togglePost'])->name('bookmarks.toggle-post');
     Route::post('bookmarks/jobs/{job}', [BookmarkController::class, 'toggleJob'])->name('bookmarks.toggle-job');
     Route::post('bookmarks/users/{user}', [BookmarkController::class, 'toggleUser'])->name('bookmarks.toggle-user');
+
+    // Stories Routes
+    Route::get('api/stories', [StoryController::class, 'index'])->name('stories.index');
+    Route::post('stories', [StoryController::class, 'store'])->name('stories.store');
+    Route::get('stories/{userId}', [StoryController::class, 'show'])->name('stories.show');
+    Route::delete('stories/{story}', [StoryController::class, 'destroy'])->name('stories.destroy');
+    Route::post('stories/cleanup', [StoryController::class, 'cleanup'])->name('stories.cleanup');
+    
+    // Story Likes Routes
+    Route::post('stories/{story}/like', [StoryLikeController::class, 'toggleLike'])->name('stories.like');
+    Route::get('stories/{story}/like-status', [StoryLikeController::class, 'getLikeStatus'])->name('stories.like-status');
+
+    // User Theme Preference Route
+    Route::patch('user/theme-preference', [UserController::class, 'updateThemePreference'])->name('user.theme-preference');
 });
 
 // Redirect unauthenticated users to login for main routes
