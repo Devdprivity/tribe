@@ -8,7 +8,8 @@ import {
     MessageCircle,
     Share2,
     MoreHorizontal,
-    Plus
+    Plus,
+    Video
 } from 'lucide-react';
 import AuthenticatedLayout from '@/layouts/authenticated-layout';
 import PostCard from '@/components/post-card';
@@ -19,6 +20,7 @@ import IslaDinamic from '@/components/isla-dinamic';
 import DemoPosts from '@/components/demo-posts';
 import { useState, useEffect } from 'react';
 import { useCreatePost } from '@/contexts/create-post-context';
+import { useCreateLiveStream } from '@/contexts/create-livestream-context';
 
 interface Post {
     id: number;
@@ -73,7 +75,10 @@ export default function Timeline({ posts, filters }: Props) {
     const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
-    const { openCreatePostModal } = useCreatePost();
+    const { openCreatePostModal, isCreatePostModalOpen } = useCreatePost();
+    const { openModal: openLiveStreamModal } = useCreateLiveStream();
+    
+    console.log('Timeline - isCreatePostModalOpen:', isCreatePostModalOpen);
 
     useEffect(() => {
         // Simular carga de datos
@@ -102,14 +107,32 @@ export default function Timeline({ posts, filters }: Props) {
             ) : (
                 <div className="max-w-2xl mx-auto px-4">
                     <div className="space-y-6">
-                        {/* Isla Dinámica y Botón Create Post - Centrados horizontalmente */}
-                        <div className="flex items-center justify-center gap-2">
+                        {/* Isla Dinámica con Iconos de Acción - Centrados horizontalmente */}
+                        <div className="flex items-center justify-center gap-3">
+                            {/* Icono de Live Streaming */}
+                            <Button
+                                onClick={() => {
+                                    console.log('Live stream button clicked');
+                                    openLiveStreamModal();
+                                }}
+                                className="bg-red-500/80 hover:bg-red-500 text-white border-red-400/50 shadow-lg shadow-red-500/25 rounded-full w-10 h-10 apple-liquid-button -translate-y-2"
+                                title="Iniciar Live Streaming"
+                            >
+                                <Video className="h-4 w-4" />
+                            </Button>
+                            
                             <IslaDinamic 
                                 onFilterChange={(filter) => console.log('Filter:', filter)}
                             />
+                            
+                            {/* Botón Create Post */}
                             <Button
-                                onClick={openCreatePostModal}
+                                onClick={() => {
+                                    console.log('Create post button clicked');
+                                    openCreatePostModal();
+                                }}
                                 className="bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25 rounded-full w-10 h-10 apple-liquid-button -translate-y-2"
+                                title="Crear Post"
                             >
                                 <Plus className="h-4 w-4" />
                             </Button>

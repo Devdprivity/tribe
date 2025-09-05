@@ -1,0 +1,119 @@
+/* LiveStream Modal Styles */
+.create-livestream-modal {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.create-livestream-modal .modal-content {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.create-livestream-modal input,
+.create-livestream-modal textarea,
+.create-livestream-modal [role="combobox"] {
+    background: rgba(31, 41, 55, 0.8) !important;
+    border: 1px solid rgba(75, 85, 99, 0.8) !important;
+    color: white !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.create-livestream-modal input:focus,
+.create-livestream-modal textarea:focus,
+.create-livestream-modal [role="combobox"]:focus {
+    border-color: rgb(59, 130, 246) !important;
+    box-shadow: 0 0 0 1px rgb(59, 130, 246) !important;
+    background: rgba(31, 41, 55, 0.9) !important;
+}
+
+.create-livestream-modal input::placeholder,
+.create-livestream-modal textarea::placeholder {
+    color: rgba(156, 163, 175, 0.8) !important;
+}
+
+/* Switch improvements */
+.create-livestream-modal [data-state="checked"] {
+    background-color: rgb(59, 130, 246) !important;
+}
+
+.create-livestream-modal [data-state="unchecked"] {
+    background-color: rgba(75, 85, 99, 0.8) !important;
+}
+
+/* Select dropdown improvements */
+.create-livestream-modal [role="option"]:hover {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.create-livestream-modal [role="option"][data-highlighted] {
+    background-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Button improvements */
+.create-livestream-modal button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.create-livestream-modal .button-primary {
+    background: linear-gradient(135deg, rgb(239, 68, 68) 0%, rgb(220, 38, 38) 100%);
+    border: 1px solid rgba(248, 113, 113, 0.5);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+
+.create-livestream-modal .button-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgb(220, 38, 38) 0%, rgb(185, 28, 28) 100%);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+}
+
+/* Loading spinner */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Smooth transitions */
+.create-livestream-modal * {
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Focus styles for accessibility */
+.create-livestream-modal *:focus-visible {
+    outline: 2px solid rgb(59, 130, 246);
+    outline-offset: 2px;
+}
+
+/* Tag badges */
+.create-livestream-modal .tag-badge {
+    background: rgba(59, 130, 246, 0.2);
+    color: rgb(147, 197, 253);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Configuration toggles */
+.create-livestream-modal .config-toggle {
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid rgba(75, 85, 99, 0.5);
+    transition: all 0.2s ease-in-out;
+}
+
+.create-livestream-modal .config-toggle:hover {
+    background: rgba(31, 41, 55, 0.7);
+    border-color: rgba(75, 85, 99, 0.7);
+}

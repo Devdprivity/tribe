@@ -49,8 +49,6 @@
         
         {{-- Fallback fonts para evitar errores 404 --}}
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            
             body {
                 font-family: 'Inter', 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             }

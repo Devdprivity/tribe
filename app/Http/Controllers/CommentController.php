@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Gate;
 
 class CommentController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -54,10 +60,10 @@ class CommentController extends Controller
         if ($request->parent_id) {
             // Es una respuesta a un comentario
             $parentComment = Comment::find($request->parent_id);
-            NotificationService::commentReplied($user, $parentComment, $comment);
+            $this->notificationService->commentReplied($user, $parentComment, $comment);
         } else {
             // Es un comentario en un post
-            NotificationService::postCommented($user, $post, $comment);
+            $this->notificationService->postCommented($user, $post, $comment);
         }
 
         // Si es una petición AJAX/API, devolver JSON
@@ -176,7 +182,7 @@ class CommentController extends Controller
             ]);
             
             // Crear notificación de like
-            NotificationService::commentLiked($user, $comment);
+            $this->notificationService->commentLiked($user, $comment);
             
             $action = 'added';
         }

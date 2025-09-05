@@ -279,7 +279,7 @@ export default function MyApplications({ applications, filters }: Props) {
                 )}
 
                 {/* Paginación */}
-                {applications.last_page > 1 && (
+                {applications && applications.last_page && applications.last_page > 1 && (
                     <div className="flex justify-center">
                         <div className="flex gap-2">
                             {Array.from({ length: applications.last_page }, (_, i) => i + 1).map((page) => (

@@ -21,7 +21,7 @@ class StoryController extends Controller
         $followingIds = $user->following()->pluck('users.id')->toArray();
         $userIds = array_merge($followingIds, [Auth::id()]);
 
-        $stories = Story::with(['user', 'likes'])
+        $stories = Story::with(['user', 'likes', 'comments'])
             ->whereIn('user_id', $userIds)
             ->active()
             ->latest()
@@ -47,6 +47,7 @@ class StoryController extends Controller
                             'created_at' => $story->created_at,
                             'likes_count' => $story->likes_count,
                             'is_liked' => $story->isLikedBy($user->id),
+                            'comments_count' => $story->comments_count,
                         ];
                     }),
                     'has_viewed' => false, // TODO: Implementar sistema de vistas
@@ -165,7 +166,7 @@ class StoryController extends Controller
     public function show($userId)
     {
         $user = Auth::user();
-        $stories = Story::with(['user', 'likes'])
+        $stories = Story::with(['user', 'likes', 'comments'])
             ->where('user_id', $userId)
             ->active()
             ->latest()
@@ -193,6 +194,7 @@ class StoryController extends Controller
                     'created_at' => $story->created_at,
                     'likes_count' => $story->likes_count,
                     'is_liked' => $story->isLikedBy($user->id),
+                    'comments_count' => $story->comments_count,
                 ];
             })
         ]);

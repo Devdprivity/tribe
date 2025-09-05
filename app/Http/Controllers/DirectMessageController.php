@@ -12,6 +12,12 @@ use Inertia\Response;
 
 class DirectMessageController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
     /**
      * Mostrar conversaciones del usuario
      */
@@ -90,7 +96,7 @@ class DirectMessageController extends Controller
         ]);
 
         // Crear notificación
-        NotificationService::directMessage($fromUser, $toUser, $request->message);
+        $this->notificationService->directMessage($fromUser, $toUser, $request->message);
 
         $directMessage->load(['fromUser', 'toUser']);
 

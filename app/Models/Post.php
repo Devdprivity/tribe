@@ -127,26 +127,48 @@ class Post extends Model
 
     /**
      * Obtener el número de likes por tipo
+     * DEPRECATED: Causa N+1 queries, usar batch loading en controllers
      */
     public function getLikesCountByType(string $type = 'like'): int
     {
+        // DEPRECATED: Este método causa N+1. Usar batch loading desde PostController
+        // En producción, los counts se cargan via batch queries
         return $this->likes()->where('type', $type)->count();
+    }
+    
+    /**
+     * Get likes count from pre-loaded relation or cached attribute
+     * OCTANE OPTIMIZED VERSION
+     */
+    public function getCachedLikesCountByType(string $type = 'like'): int
+    {
+        // Usar atributos pre-calculados desde el controller
+        return match($type) {
+            'fire' => $this->fire_count ?? 0,
+            'idea' => $this->idea_count ?? 0, 
+            'bug' => $this->bug_count ?? 0,
+            'sparkle' => $this->sparkle_count ?? 0,
+            'like' => $this->like_count ?? 0,
+            default => $this->likes()->where('type', $type)->count()
+        };
     }
 
     /**
-     * Incrementar contador de likes
+     * Incrementar contador de likes (OPTIMIZADO para Octane)
      */
     public function incrementLikesCount(): void
     {
-        $this->increment('likes_count');
+        // Use DB increment to avoid model instance memory retention
+        self::where('id', $this->id)->increment('likes_count');
     }
 
     /**
-     * Decrementar contador de likes
+     * Decrementar contador de likes (OPTIMIZADO para Octane) 
      */
     public function decrementLikesCount(): void
     {
-        $this->decrement('likes_count');
+        // Use DB decrement to avoid model instance memory retention
+        self::where('id', $this->id)->decrement('likes_count');
     }
 
     /**

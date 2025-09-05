@@ -13,6 +13,15 @@ use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\StoryLikeController;
+use App\Http\Controllers\StoryCommentController;
+use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\MarketplaceController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\DisputeController;
+use App\Http\Controllers\FileDeliveryController;
+use App\Http\Controllers\Api\CertificationStatsController;
+use App\Http\Controllers\CertificationController;
+use App\Http\Controllers\LiveStreamController;
 
 Route::get('/', function () {
     return Auth::check() ? redirect()->route('timeline.redirect') : redirect()->route('login');
@@ -111,6 +120,113 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Story Likes Routes
     Route::post('stories/{story}/like', [StoryLikeController::class, 'toggleLike'])->name('stories.like');
     Route::get('stories/{story}/like-status', [StoryLikeController::class, 'getLikeStatus'])->name('stories.like-status');
+    
+    // Story Comments Routes
+    Route::get('stories/{story}/comments', [StoryCommentController::class, 'index'])->name('stories.comments');
+    Route::post('stories/{story}/comments', [StoryCommentController::class, 'store'])->name('stories.comments.store');
+    Route::delete('story-comments/{comment}', [StoryCommentController::class, 'destroy'])->name('stories.comments.destroy');
+    
+    // Activity Routes
+    Route::get('api/activities/recent', [ActivityController::class, 'recent'])->name('activities.recent');
+    
+    // LiveStream Routes
+    Route::get('streaming', [LiveStreamController::class, 'index'])->name('streaming.index');
+    Route::get('streaming/create', [LiveStreamController::class, 'create'])->name('streaming.create');
+    Route::post('api/livestreams', [LiveStreamController::class, 'store'])->name('livestreams.store');
+    Route::get('streaming/{stream}', [LiveStreamController::class, 'show'])->name('streaming.show');
+    Route::get('streaming/dashboard', [LiveStreamController::class, 'dashboard'])->name('streaming.dashboard');
+    Route::get('streaming/dashboard/{stream}', [LiveStreamController::class, 'dashboardShow'])->name('streaming.dashboard.show');
+    Route::post('streaming/{stream}/start', [LiveStreamController::class, 'start'])->name('streaming.start');
+    Route::post('streaming/{stream}/end', [LiveStreamController::class, 'end'])->name('streaming.end');
+    Route::post('streaming/{stream}/join', [LiveStreamController::class, 'join'])->name('streaming.join');
+    Route::post('streaming/{stream}/leave', [LiveStreamController::class, 'leave'])->name('streaming.leave');
+
+    // Certification API Routes
+    Route::get('api/certifications/user-stats', [CertificationStatsController::class, 'getUserStats'])->name('api.certifications.user-stats');
+    Route::get('api/certifications/global-stats', [CertificationStatsController::class, 'getGlobalStats'])->name('api.certifications.global-stats');
+    
+    // Certificaciones
+    Route::get('certifications', [CertificationController::class, 'index'])->name('certifications.index');
+
+    // Live Streaming Routes
+    Route::prefix('streaming')->name('streaming.')->group(function () {
+        Route::get('/', [LiveStreamController::class, 'index'])->name('index');
+        Route::get('create', [LiveStreamController::class, 'create'])->name('create');
+        Route::get('dashboard', [LiveStreamController::class, 'dashboard'])->name('dashboard');
+        Route::get('{stream}', [LiveStreamController::class, 'show'])->name('show');
+        Route::get('dashboard/{stream}', [LiveStreamController::class, 'dashboardShow'])->name('stream.dashboard');
+        Route::post('{stream}/start', [LiveStreamController::class, 'start'])->name('start');
+        Route::post('{stream}/end', [LiveStreamController::class, 'end'])->name('end');
+        Route::post('{stream}/join', [LiveStreamController::class, 'join'])->name('join');
+        Route::post('{stream}/leave', [LiveStreamController::class, 'leave'])->name('leave');
+    });
+
+    // Live Streaming API Routes
+    Route::post('api/livestreams', [LiveStreamController::class, 'store'])->name('api.livestreams.store');
+    Route::get('api/livestreams', [LiveStreamController::class, 'index'])->name('api.livestreams.index');
+    Route::get('api/livestreams/{stream}', [LiveStreamController::class, 'show'])->name('api.livestreams.show');
+    Route::patch('api/livestreams/{stream}', [LiveStreamController::class, 'update'])->name('api.livestreams.update');
+    Route::delete('api/livestreams/{stream}', [LiveStreamController::class, 'destroy'])->name('api.livestreams.destroy');
+
+    // Marketplace Routes
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        // Public marketplace pages
+        Route::get('/', [MarketplaceController::class, 'index'])->name('index');
+        Route::get('products/{product}', [MarketplaceController::class, 'show'])->name('products.show');
+        Route::get('categories/{category}', [MarketplaceController::class, 'byCategory'])->name('categories.show');
+        Route::get('search', [MarketplaceController::class, 'search'])->name('search');
+        
+        // Product management (authenticated)
+        Route::middleware('auth')->group(function () {
+            Route::get('create', [MarketplaceController::class, 'create'])->name('create');
+            Route::post('products', [MarketplaceController::class, 'store'])->name('store');
+            Route::get('products/{product}/edit', [MarketplaceController::class, 'edit'])->name('edit');
+            Route::put('products/{product}', [MarketplaceController::class, 'update'])->name('update');
+            Route::delete('products/{product}', [MarketplaceController::class, 'destroy'])->name('destroy');
+            Route::post('products/{product}/toggle-status', [MarketplaceController::class, 'toggleStatus'])->name('toggle-status');
+            
+            // My products and sales
+            Route::get('my-products', [MarketplaceController::class, 'myProducts'])->name('my-products');
+            Route::get('my-sales', [MarketplaceController::class, 'mySales'])->name('my-sales');
+            Route::get('my-purchases', [PaymentController::class, 'purchases'])->name('my-purchases');
+            
+            // Payment and checkout
+            Route::post('products/{product}/purchase', [PaymentController::class, 'createPaymentIntent'])->name('purchase');
+            Route::post('payments/confirm', [PaymentController::class, 'confirmPayment'])->name('payment.confirm');
+            Route::get('payment/success', [PaymentController::class, 'success'])->name('payment.success');
+            Route::get('payment/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
+            Route::post('purchases/{purchase}/refund', [PaymentController::class, 'requestRefund'])->name('refund');
+            Route::get('download/{token}', [PaymentController::class, 'download'])->name('download');
+            
+            // Reviews
+            Route::post('purchases/{purchase}/review', [MarketplaceController::class, 'submitReview'])->name('review');
+            Route::put('reviews/{review}', [MarketplaceController::class, 'updateReview'])->name('review.update');
+            Route::delete('reviews/{review}', [MarketplaceController::class, 'deleteReview'])->name('review.delete');
+            Route::get('products/{product}/reviews', [MarketplaceController::class, 'reviews'])->name('reviews');
+            Route::post('reviews/{review}/helpful', [MarketplaceController::class, 'helpfulVote'])->name('review.helpful');
+        });
+    });
+
+    // Disputes Routes
+    Route::prefix('disputes')->name('disputes.')->middleware('auth')->group(function () {
+        Route::get('/', [DisputeController::class, 'index'])->name('index');
+        Route::get('create/{purchase}', [DisputeController::class, 'create'])->name('create');
+        Route::post('{purchase}', [DisputeController::class, 'store'])->name('store');
+        Route::get('{dispute}', [DisputeController::class, 'show'])->name('show');
+        Route::post('{dispute}/respond', [DisputeController::class, 'respond'])->name('respond');
+        Route::post('{dispute}/escalate', [DisputeController::class, 'escalate'])->name('escalate');
+        
+        // Admin routes
+        Route::middleware('admin')->group(function () {
+            Route::get('admin', [DisputeController::class, 'adminIndex'])->name('admin.index');
+            Route::get('{dispute}/resolve', [DisputeController::class, 'resolve'])->name('resolve');
+            Route::post('{dispute}/resolve', [DisputeController::class, 'processResolution'])->name('process-resolution');
+            Route::post('{dispute}/assign', [DisputeController::class, 'assign'])->name('assign');
+        });
+    });
+
+    // Stripe Webhook (no auth required)
+    Route::post('stripe/webhook', [PaymentController::class, 'webhook'])->name('stripe.webhook');
 
     // User Theme Preference Route
     Route::patch('user/theme-preference', [UserController::class, 'updateThemePreference'])->name('user.theme-preference');

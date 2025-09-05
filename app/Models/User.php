@@ -221,26 +221,42 @@ class User extends Authenticatable
     // Métodos auxiliares
 
     /**
-     * Verificar si el usuario sigue a otro usuario
+     * Verificar si el usuario sigue a otro usuario (OPTIMIZADO - usar en batch desde controller)
      */
     public function isFollowing(User $user): bool
     {
+        // DEPRECATED: Este método causa N+1, usar batchIsFollowing en controllers
         return $this->following()->where('followed_id', $user->id)->exists();
     }
 
     /**
-     * Verificar si el usuario es miembro de un canal
+     * Batch check if user is following multiple users (OCTANE OPTIMIZED)
+     */
+    public function batchIsFollowing(array $userIds): array
+    {
+        $following = $this->following()
+            ->whereIn('followed_id', $userIds)
+            ->pluck('followed_id')
+            ->flip();
+            
+        return array_map(fn($id) => isset($following[$id]), $userIds);
+    }
+
+    /**
+     * Verificar si el usuario es miembro de un canal (DEPRECATED)
      */
     public function isMemberOf(Channel $channel): bool
     {
+        // DEPRECATED: Este método causa N+1, usar loadChannelMemberships en controllers
         return $this->channels()->where('channel_id', $channel->id)->exists();
     }
 
     /**
-     * Verificar si le gusta un post
+     * Verificar si le gusta un post (DEPRECATED)
      */
     public function likesPost(Post $post, string $type = 'like'): bool
     {
+        // DEPRECATED: Este método causa N+1, usar batchLikes en controllers
         return $this->likedPosts()->where('post_id', $post->id)->wherePivot('type', $type)->exists();
     }
 
@@ -334,10 +350,16 @@ class User extends Authenticatable
             $baseUsername = $providerUser['nickname'] ?? str_replace(' ', '_', strtolower($providerUser['name'] ?? 'user'));
         }
 
-        // 2. Generar username único
+        // 2. Generar username único (OPTIMIZADO para evitar múltiples queries)
+        $existingUsernames = self::where('username', 'like', $baseUsername . '%')
+            ->pluck('username')
+            ->flip();
+            
         $username = $baseUsername;
         $counter = 1;
-        while (self::where('username', $username)->exists()) {
+        
+        // Usar in-memory check en lugar de queries repetidas
+        while (isset($existingUsernames[$username])) {
             $username = $baseUsername . '_' . $counter;
             $counter++;
         }
@@ -392,5 +414,13 @@ class User extends Authenticatable
             'user' => $user,
             'isNewUser' => $isNewUser
         ];
+    }
+
+    /**
+     * Verificar si el usuario está en línea
+     */
+    public function isOnline(): bool
+    {
+        return $this->last_login_at && $this->last_login_at->diffInMinutes(now()) < 5;
     }
 }

@@ -7,8 +7,10 @@ import RightPanel from '@/components/right-panel';
 import { useAppearance } from '@/hooks/use-appearance';
 import AppInitializer from '@/components/app-initializer';
 import CommentsModal from '@/components/comments-modal';
+import ActivityModal from '@/components/activity-modal';
 import { useComments } from '@/contexts/comments-context';
 import { usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 interface Props {
     title?: string;
@@ -20,6 +22,7 @@ export default function AuthenticatedLayout({ children, title, description }: Pr
     const { isCommentsModalOpen, selectedPost, closeCommentsModal } = useComments();
     const { auth } = usePage().props as any;
     const currentUser = auth.user;
+    const [showActivityModal, setShowActivityModal] = useState(false);
 
     return (
         <AppInitializer>
@@ -34,7 +37,10 @@ export default function AuthenticatedLayout({ children, title, description }: Pr
 
                         {/* Contenido Principal - Feed Central */}
                         <div className="flex-1 flex flex-col h-full">
-                            <AppHeader />
+                            <AppHeader 
+                                showActivityModal={showActivityModal}
+                                setShowActivityModal={setShowActivityModal}
+                            />
 
                             {/* Feed Central */}
                             <main className="flex-1 flex justify-center overflow-y-auto main-content-scroll">
@@ -58,6 +64,12 @@ export default function AuthenticatedLayout({ children, title, description }: Pr
                         currentUser={currentUser}
                     />
                 )}
+
+                {/* Modal de Actividad */}
+                <ActivityModal 
+                    isOpen={showActivityModal} 
+                    onClose={() => setShowActivityModal(false)} 
+                />
             </>
         </AppInitializer>
     );

@@ -2,121 +2,171 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Job;
+use App\Models\JobOpportunity;
 use App\Models\JobApplication;
 use App\Models\User;
+use App\Services\AIMatchingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class JobController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $jobs = Job::with(['poster'])
-            ->active()
-            ->when($request->search, function ($query, $search) {
-                return $query->search($search);
-            })
-            ->when($request->remote, function ($query) {
-                return $query->remote();
-            })
-            ->when($request->location, function ($query, $location) {
-                return $query->inLocation($location);
-            })
-            ->latest()
-            ->paginate(10);
+        $filters = $request->only([
+            'search', 'employment_type', 'work_mode', 'experience_level',
+            'salary_min', 'salary_max', 'tech_stack', 'location'
+        ]);
 
-        // Trabajos destacados
-        $featured_jobs = Job::with('poster')
-            ->where('is_active', true)
-            ->orderBy('applications_count', 'desc')
-            ->take(5)
-            ->get();
+        $jobs = JobOpportunity::query()
+            ->with(['company'])
+            ->where('status', 'published')
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhereJsonContains('tech_stack', $search);
+                });
+            })
+            ->when($filters['employment_type'] ?? null, function ($query, $type) {
+                $query->where('employment_type', $type);
+            })
+            ->when($filters['work_mode'] ?? null, function ($query, $mode) {
+                $query->where('work_mode', $mode);
+            })
+            ->when($filters['experience_level'] ?? null, function ($query, $level) {
+                $query->where('experience_level', $level);
+            })
+            ->when($filters['salary_min'] ?? null, function ($query, $min) {
+                $query->where('salary_max', '>=', $min);
+            })
+            ->when($filters['salary_max'] ?? null, function ($query, $max) {
+                $query->where('salary_min', '<=', $max);
+            })
+            ->when($filters['tech_stack'] ?? null, function ($query, $tech) {
+                $query->whereJsonContains('tech_stack', $tech);
+            })
+            ->when($filters['location'] ?? null, function ($query, $location) {
+                $query->where('location', 'like', "%{$location}%");
+            })
+            ->orderByDesc('is_featured')
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
-        // Aplicaciones recientes del usuario
-        $recent_applications = [];
+        // AI-powered job recommendations for authenticated users
+        $recommendations = [];
         if (Auth::check()) {
-            $recent_applications = Job::with('poster')
-                ->whereHas('applications', function ($q) {
-                    $q->where('user_id', Auth::id());
-                })
-                ->orderBy('created_at', 'desc')
-                ->take(5)
-                ->get();
+            $aiService = new AIMatchingService();
+            $recommendations = $aiService->getJobRecommendations(Auth::user(), 5);
         }
 
-        return Inertia::render('jobs', [
+        return Inertia::render('Jobs/Index', [
             'jobs' => $jobs,
-            'filters' => $request->only('search', 'remote', 'location'),
-            'featured_jobs' => $featured_jobs,
-            'recent_applications' => $recent_applications,
+            'recommendations' => $recommendations,
+            'filters' => $filters,
+            'employmentTypes' => $this->getEmploymentTypes(),
+            'workModes' => $this->getWorkModes(),
+            'experienceLevels' => $this->getExperienceLevels(),
+            'popularTechStack' => $this->getPopularTechStack(),
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return Inertia::render('jobs/create');
+        return Inertia::render('Jobs/Create', [
+            'employmentTypes' => $this->getEmploymentTypes(),
+            'workModes' => $this->getWorkModes(),
+            'experienceLevels' => $this->getExperienceLevels(),
+            'popularTechStack' => $this->getPopularTechStack(),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'company_name' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'requirements' => 'nullable|array',
-            'salary_range' => 'nullable|string|max:255',
+            'requirements' => 'required|string',
+            'responsibilities' => 'required|string',
+            'required_skills' => 'required|array|min:1',
+            'preferred_skills' => 'nullable|array',
+            'tech_stack' => 'required|array|min:1',
+            'employment_type' => 'required|in:full_time,part_time,contract,freelance,internship',
+            'experience_level' => 'required|in:entry,junior,mid,senior,lead,principal',
+            'work_mode' => 'required|in:remote,hybrid,on_site',
             'location' => 'nullable|string|max:255',
-            'remote_friendly' => 'boolean',
+            'salary_min' => 'nullable|numeric|min:0',
+            'salary_max' => 'nullable|numeric|min:0',
+            'benefits' => 'nullable|array',
+            'visa_sponsorship' => 'boolean',
+            'application_deadline' => 'nullable|date|after:today',
+            'positions_available' => 'integer|min:1',
         ]);
 
-        $job = Job::create([
-            'company_name' => $request->company_name,
+        $job = JobOpportunity::create([
+            'company_id' => Auth::id(),
             'title' => $request->title,
             'description' => $request->description,
             'requirements' => $request->requirements,
-            'salary_range' => $request->salary_range,
+            'responsibilities' => $request->responsibilities,
+            'required_skills' => $request->required_skills,
+            'preferred_skills' => $request->preferred_skills,
+            'tech_stack' => $request->tech_stack,
+            'employment_type' => $request->employment_type,
+            'experience_level' => $request->experience_level,
+            'work_mode' => $request->work_mode,
             'location' => $request->location,
-            'remote_friendly' => $request->remote_friendly ?? false,
-            'posted_by' => Auth::id(),
+            'salary_min' => $request->salary_min,
+            'salary_max' => $request->salary_max,
+            'benefits' => $request->benefits,
+            'visa_sponsorship' => $request->visa_sponsorship ?? false,
+            'application_deadline' => $request->application_deadline,
+            'positions_available' => $request->positions_available ?? 1,
+            'status' => 'published',
         ]);
 
         return redirect()->route('jobs.show', $job)
-            ->with('success', '¡Trabajo publicado exitosamente!');
+            ->with('success', 'Trabajo publicado exitosamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Job $job)
+    public function show(JobOpportunity $job)
     {
-        $job->load(['poster', 'applications.user']);
+        $job->load(['company', 'applications' => function ($query) {
+            $query->where('applicant_id', Auth::id());
+        }]);
 
-        // Verificar si el usuario ya aplicó
-        $hasApplied = false;
-        $userApplication = null;
+        $job->increment('views_count');
 
+        // AI matching score for current user
+        $matchScore = null;
         if (Auth::check()) {
-            $userApplication = $job->getApplicationFor(Auth::user());
-            $hasApplied = $userApplication !== null;
+            $aiService = new AIMatchingService();
+            $matchScore = $aiService->calculateJobMatchScore(Auth::user(), $job);
         }
 
-        return Inertia::render('jobs/show', [
+        // Similar jobs
+        $similarJobs = JobOpportunity::where('id', '!=', $job->id)
+            ->where('status', 'published')
+            ->where(function ($query) use ($job) {
+                $query->where('employment_type', $job->employment_type)
+                      ->orWhere('experience_level', $job->experience_level)
+                      ->orWhere(function ($q) use ($job) {
+                          foreach ($job->tech_stack as $tech) {
+                              $q->orWhereJsonContains('tech_stack', $tech);
+                          }
+                      });
+            })
+            ->with('company')
+            ->take(6)
+            ->get();
+
+        return Inertia::render('Jobs/Show', [
             'job' => $job,
-            'hasApplied' => $hasApplied,
-            'userApplication' => $userApplication,
-            'canEdit' => Auth::check() && $job->posted_by === Auth::id(),
+            'matchScore' => $matchScore,
+            'similarJobs' => $similarJobs,
+            'userApplication' => $job->applications->first(),
         ]);
     }
 
@@ -176,34 +226,44 @@ class JobController extends Controller
             ->with('success', '¡Trabajo eliminado exitosamente!');
     }
 
-    /**
-     * Apply to a job
-     */
-    public function apply(Request $request, Job $job)
+    public function apply(Request $request, JobOpportunity $job)
     {
         $request->validate([
-            'cover_letter' => 'nullable|string|max:2000',
+            'cover_letter' => 'required|string|max:2000',
             'resume_url' => 'nullable|url',
+            'portfolio_url' => 'nullable|url',
+            'answers' => 'nullable|array',
         ]);
 
-        $user = Auth::user();
+        // Check if user already applied
+        $existingApplication = $job->applications()
+            ->where('applicant_id', Auth::id())
+            ->exists();
 
-        if ($job->hasApplicant($user)) {
-            return back()->with('error', 'Ya has aplicado a este trabajo.');
+        if ($existingApplication) {
+            return back()->withErrors(['error' => 'Ya has aplicado a esta posición.']);
         }
 
-        if ($job->posted_by === $user->id) {
-            return back()->with('error', 'No puedes aplicar a tu propio trabajo.');
-        }
+        // Calculate AI match score
+        $aiService = new AIMatchingService();
+        $matchScore = $aiService->calculateJobMatchScore(Auth::user(), $job);
+        $skillsMatch = $aiService->analyzeSkillsMatch(Auth::user(), $job);
 
-        JobApplication::create([
-            'job_id' => $job->id,
-            'user_id' => $user->id,
+        $application = $job->applications()->create([
+            'applicant_id' => Auth::id(),
             'cover_letter' => $request->cover_letter,
             'resume_url' => $request->resume_url,
+            'portfolio_url' => $request->portfolio_url,
+            'answers' => $request->answers,
+            'status' => 'applied',
+            'ai_match_score' => $matchScore,
+            'skills_match' => $skillsMatch,
         ]);
 
-        return back()->with('success', '¡Aplicación enviada exitosamente!');
+        $job->increment('applications_count');
+
+        return redirect()->route('jobs.show', $job)
+            ->with('success', 'Aplicación enviada exitosamente.');
     }
 
     /**
@@ -258,45 +318,101 @@ class JobController extends Controller
         return back()->with('success', "¡{$message} exitosamente!");
     }
 
-    /**
-     * Get user's applied jobs
-     */
-    public function myApplications(Request $request)
+    public function myApplications()
     {
-        $applications = JobApplication::with(['job.poster'])
-            ->where('user_id', Auth::id())
-            ->when($request->status, function ($query, $status) {
-                return $query->where('status', $status);
-            })
-            ->latest()
-            ->paginate(10);
+        $applications = JobApplication::where('applicant_id', Auth::id())
+            ->with(['job.company'])
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
-        return Inertia::render('jobs/my-applications', [
+        $stats = [
+            'total' => $applications->total(),
+            'pending' => JobApplication::where('applicant_id', Auth::id())
+                ->whereIn('status', ['applied', 'reviewing'])
+                ->count(),
+            'interviews' => JobApplication::where('applicant_id', Auth::id())
+                ->where('status', 'interview')
+                ->count(),
+            'offers' => JobApplication::where('applicant_id', Auth::id())
+                ->where('status', 'offer')
+                ->count(),
+        ];
+
+        return Inertia::render('Jobs/MyApplications', [
             'applications' => $applications,
-            'filters' => $request->only('status'),
+            'stats' => $stats,
         ]);
     }
 
-    /**
-     * Get user's posted jobs
-     */
-    public function myJobs(Request $request)
+    public function companyDashboard()
     {
-        $jobs = Job::with(['applications.user'])
-            ->where('posted_by', Auth::id())
-            ->when($request->status, function ($query, $status) {
-                if ($status === 'active') {
-                    return $query->active();
-                } elseif ($status === 'inactive') {
-                    return $query->inactive();
-                }
-            })
-            ->latest()
-            ->paginate(10);
+        $user = Auth::user();
+        
+        $jobs = JobOpportunity::where('company_id', $user->id)
+            ->withCount('applications')
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
-        return Inertia::render('jobs/my-jobs', [
+        $stats = [
+            'total_jobs' => $jobs->total(),
+            'active_jobs' => JobOpportunity::where('company_id', $user->id)
+                ->where('status', 'published')
+                ->count(),
+            'total_applications' => JobApplication::whereHas('job', function ($query) use ($user) {
+                $query->where('company_id', $user->id);
+            })->count(),
+            'pending_reviews' => JobApplication::whereHas('job', function ($query) use ($user) {
+                $query->where('company_id', $user->id);
+            })->where('status', 'applied')->count(),
+        ];
+
+        return Inertia::render('Jobs/CompanyDashboard', [
             'jobs' => $jobs,
-            'filters' => $request->only('status'),
+            'stats' => $stats,
         ]);
+    }
+
+    private function getEmploymentTypes(): array
+    {
+        return [
+            'full_time' => 'Tiempo Completo',
+            'part_time' => 'Medio Tiempo',
+            'contract' => 'Contrato',
+            'freelance' => 'Freelance',
+            'internship' => 'Prácticas',
+        ];
+    }
+
+    private function getWorkModes(): array
+    {
+        return [
+            'remote' => 'Remoto',
+            'hybrid' => 'Híbrido',
+            'on_site' => 'Presencial',
+        ];
+    }
+
+    private function getExperienceLevels(): array
+    {
+        return [
+            'entry' => 'Entrada',
+            'junior' => 'Junior',
+            'mid' => 'Intermedio',
+            'senior' => 'Senior',
+            'lead' => 'Lead',
+            'principal' => 'Principal',
+        ];
+    }
+
+    private function getPopularTechStack(): array
+    {
+        return DB::table('job_opportunities')
+            ->selectRaw('JSON_UNQUOTE(JSON_EXTRACT(tech_stack, "$[*]")) as tech')
+            ->where('status', 'published')
+            ->groupBy('tech')
+            ->orderByRaw('COUNT(*) DESC')
+            ->limit(50)
+            ->pluck('tech')
+            ->toArray();
     }
 }

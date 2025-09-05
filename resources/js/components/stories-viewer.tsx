@@ -27,6 +27,7 @@ interface Story {
     created_at: string;
     likes_count: number;
     is_liked: boolean;
+    comments_count: number;
 }
 
 interface StoryGroup {
@@ -64,6 +65,10 @@ export default function StoriesViewer({
     const [isLiked, setIsLiked] = useState(false);
     const [likesCount, setLikesCount] = useState(0);
     const [isLiking, setIsLiking] = useState(false);
+    const [showCommentInput, setShowCommentInput] = useState(false);
+    const [commentText, setCommentText] = useState('');
+    const [isCommenting, setIsCommenting] = useState(false);
+    const [commentsCount, setCommentsCount] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
     const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -76,8 +81,9 @@ export default function StoriesViewer({
             setIsLoading(false); // Mostrar contenido inmediatamente
             setIsPlaying(true);
             
-            // Cargar estado de likes
+            // Cargar estado de likes y comentarios
             loadLikeStatus();
+            loadCommentsCount();
             
             // Si es un video, intentar reproducirlo inmediatamente
             if (currentStory.media_type === 'video' && videoRef.current) {
@@ -172,11 +178,71 @@ export default function StoriesViewer({
         }
     };
 
+    const loadCommentsCount = async () => {
+        if (!currentStory) return;
+        
+        // Usar datos iniciales si están disponibles
+        if (currentStory.comments_count !== undefined) {
+            setCommentsCount(currentStory.comments_count);
+            return;
+        }
+        
+        // Fallback: cargar desde API si no hay datos iniciales
+        try {
+            const response = await fetch(`/stories/${currentStory.id}/comments`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCommentsCount(data.total_count);
+            }
+        } catch (error) {
+            console.error('Error al cargar contador de comentarios:', error);
+        }
+    };
+
     const handleCommentStory = () => {
-        console.log('Comment on story:', currentStory.id);
-        // Aquí puedes implementar la lógica para comentar
-        // Por ejemplo, abrir un modal de comentarios o redirigir
-        alert('Función de comentarios en desarrollo');
+        setShowCommentInput(!showCommentInput);
+        if (!showCommentInput) {
+            setCommentText('');
+        }
+    };
+
+    const handleSubmitComment = async () => {
+        if (!currentStory || !commentText.trim() || isCommenting) return;
+        
+        setIsCommenting(true);
+        
+        try {
+            const response = await fetch(`/stories/${currentStory.id}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({
+                    content: commentText.trim(),
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCommentsCount(data.comments_count);
+                setCommentText('');
+                setShowCommentInput(false);
+            } else {
+                console.error('Error al enviar comentario');
+            }
+        } catch (error) {
+            console.error('Error al enviar comentario:', error);
+        } finally {
+            setIsCommenting(false);
+        }
     };
 
     const handleShareStory = async () => {
@@ -294,6 +360,12 @@ export default function StoriesViewer({
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [isOpen, isPlaying]);
+
+    // Cerrar input de comentarios cuando cambie la historia
+    useEffect(() => {
+        setShowCommentInput(false);
+        setCommentText('');
+    }, [currentStory]);
 
     if (!currentStory) return null;
 
@@ -446,6 +518,52 @@ export default function StoriesViewer({
                             </div>
                         )}
 
+                        {/* Input de comentarios */}
+                        {showCommentInput && (
+                            <div className="absolute bottom-4 left-4 right-20 z-50">
+                                <div className="bg-black/80 backdrop-blur-sm rounded-full border border-white/20 p-2 flex items-center gap-2 relative z-50">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 p-0 relative z-50"
+                                        style={{ zIndex: 9999 }}
+                                    >
+                                        <Heart className="h-4 w-4" />
+                                    </Button>
+                                    <input
+                                        type="text"
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSubmitComment();
+                                            }
+                                        }}
+                                        placeholder="Escribe un comentario..."
+                                        className="flex-1 bg-transparent text-white placeholder-white/50 border-0 outline-none text-sm relative z-50"
+                                        maxLength={500}
+                                        autoFocus
+                                        style={{ zIndex: 9999 }}
+                                    />
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleSubmitComment}
+                                        disabled={!commentText.trim() || isCommenting}
+                                        className="text-white/70 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 p-0 disabled:opacity-50 relative z-50"
+                                        style={{ zIndex: 9999 }}
+                                    >
+                                        {isCommenting ? (
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <span className="text-sm font-medium">→</span>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Botones de acción */}
                         <div className="absolute bottom-4 right-4 flex flex-col gap-3 z-30">
                             <div className="flex flex-col items-center gap-1">
@@ -473,18 +591,25 @@ export default function StoriesViewer({
                                     </span>
                                 )}
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="bg-black/50 hover:bg-black/70 text-white border-0 rounded-full w-12 h-12 p-0 hover:scale-110 transition-transform"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleCommentStory();
-                                }}
-                            >
-                                <MessageCircle className="h-6 w-6" />
-                            </Button>
+                            <div className="flex flex-col items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="bg-black/50 hover:bg-black/70 text-white border-0 rounded-full w-12 h-12 p-0 hover:scale-110 transition-transform"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleCommentStory();
+                                    }}
+                                >
+                                    <MessageCircle className="h-6 w-6" />
+                                </Button>
+                                {commentsCount > 0 && (
+                                    <span className="text-xs text-white/80 bg-black/50 px-2 py-1 rounded-full">
+                                        {commentsCount}
+                                    </span>
+                                )}
+                            </div>
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -500,7 +625,7 @@ export default function StoriesViewer({
                         </div>
 
                         {/* Áreas de navegación */}
-                        <div className="absolute inset-0 flex">
+                        <div className="absolute inset-0 flex z-10">
                             {/* Área izquierda - historia anterior */}
                             <div
                                 className="w-1/2 h-full cursor-pointer"
@@ -515,7 +640,7 @@ export default function StoriesViewer({
                         </div>
 
                         {/* Botones de navegación vertical */}
-                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-20">
                             {currentGroupIndex > 0 && (
                                 <Button
                                     variant="ghost"
@@ -541,7 +666,7 @@ export default function StoriesViewer({
 
                         {/* Indicador de pausa/reproducción - solo cuando está pausado manualmente */}
                         {!isPlaying && videoRef.current && videoRef.current.paused && (
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute inset-0 flex items-center justify-center z-20">
                                 <Button
                                     variant="ghost"
                                     size="lg"

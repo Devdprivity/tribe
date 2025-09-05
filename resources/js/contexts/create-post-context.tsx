@@ -17,10 +17,14 @@ export function CreatePostProvider({ children }: CreatePostProviderProps) {
     const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
 
     const openCreatePostModal = () => {
+        console.log('Opening create post modal');
+        console.log('Current state before:', isCreatePostModalOpen);
         setIsCreatePostModalOpen(true);
+        console.log('State set to true');
     };
 
     const closeCreatePostModal = () => {
+        console.log('Closing create post modal');
         setIsCreatePostModalOpen(false);
     };
 
@@ -29,6 +33,8 @@ export function CreatePostProvider({ children }: CreatePostProviderProps) {
         // Aquí podrías actualizar el estado global o recargar la página
         window.location.reload();
     };
+
+    console.log('CreatePostProvider render - isCreatePostModalOpen:', isCreatePostModalOpen);
 
     return (
         <CreatePostContext.Provider value={{

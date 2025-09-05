@@ -336,7 +336,7 @@ export default function MyJobs({ jobs, filters }: Props) {
                 )}
 
                 {/* Paginación */}
-                {jobs.last_page > 1 && (
+                {jobs && jobs.last_page && jobs.last_page > 1 && (
                     <div className="flex justify-center">
                         <div className="flex gap-2">
                             {Array.from({ length: jobs.last_page }, (_, i) => i + 1).map((page) => (

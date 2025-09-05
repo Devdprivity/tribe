@@ -4,56 +4,66 @@ namespace App\Http\Controllers;
 
 use App\Models\Channel;
 use App\Models\Post;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Exception;
 
 class ChannelController extends Controller
 {
+    public function __construct(
+        private NotificationService $notificationService
+    ) {}
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $channels = Channel::with(['creator', 'members'])
-            ->withCount('members as members_count_calc')
-            ->when($request->type, function ($query, $type) {
-                return $query->where('type', $type);
-            })
-            ->when($request->search, function ($query, $search) {
-                return $query->search($search);
-            })
-            ->when($request->my_channels, function ($query) {
-                return $query->whereHas('members', function ($q) {
-                    $q->where('user_id', Auth::id());
-                });
-            })
-            ->public()
-            ->latest()
-            ->paginate(12);
+        try {
+            $channels = Channel::with(['creator', 'members'])
+                ->withCount('members as members_count_calc')
+                ->when($request->type, fn($query, $type) => $query->where('type', $type))
+                ->when($request->search, fn($query, $search) => $query->search($search))
+                ->when($request->my_channels, function ($query) {
+                    return $query->whereHas('members', function ($q) {
+                        $q->where('user_id', Auth::id());
+                    });
+                })
+                ->public()
+                ->latest()
+                ->paginate(12);
 
-        // Obtener canales del usuario autenticado
-        $my_channels = [];
-        if (Auth::check()) {
-            $my_channels = Channel::whereHas('members', function ($q) {
-                $q->where('user_id', Auth::id());
-            })->get();
+            $my_channels = Auth::check() 
+                ? Channel::whereHas('members', fn($q) => $q->where('user_id', Auth::id()))->get()
+                : collect();
+
+            $trending_channels = Channel::withCount('members as members_count_calc')
+                ->orderBy('members_count_calc', 'desc')
+                ->take(10)
+                ->get();
+
+            return Inertia::render('channels', [
+                'channels' => $channels,
+                'filters' => $request->only('type', 'search', 'my_channels'),
+                'my_channels' => $my_channels,
+                'trending_channels' => $trending_channels,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error loading channels index', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            
+            return Inertia::render('channels', [
+                'channels' => collect(),
+                'filters' => $request->only('type', 'search', 'my_channels'),
+                'my_channels' => collect(),
+                'trending_channels' => collect(),
+            ])->with('error', 'Error al cargar los canales. Por favor, inténtalo de nuevo.');
         }
-
-        // Canales trending
-        $trending_channels = Channel::withCount('members as members_count_calc')
-            ->orderBy('members_count_calc', 'desc')
-            ->take(10)
-            ->get();
-
-        return Inertia::render('channels', [
-            'channels' => $channels,
-            'filters' => $request->only('type', 'search', 'my_channels'),
-            'my_channels' => $my_channels,
-            'trending_channels' => $trending_channels,
-        ]);
     }
 
     /**
@@ -69,28 +79,50 @@ class ChannelController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'type' => 'required|in:technology,level,industry,location',
-            'avatar' => 'nullable|url',
-            'is_private' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string|max:1000',
+                'type' => 'required|in:technology,level,industry,location',
+                'avatar' => 'nullable|url',
+                'is_private' => 'boolean',
+            ]);
 
-        $channel = Channel::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'type' => $request->type,
-            'avatar' => $request->avatar,
-            'is_private' => $request->is_private ?? false,
-            'created_by' => Auth::id(),
-        ]);
+            DB::beginTransaction();
 
-        // Automáticamente agregar al creador como admin
-        $channel->addMember(Auth::user(), 'admin');
+            $channel = Channel::create([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'type' => $validated['type'],
+                'avatar' => $validated['avatar'] ?? null,
+                'is_private' => $validated['is_private'] ?? false,
+                'created_by' => Auth::id(),
+            ]);
 
-        return redirect()->route('channels.show', $channel)
-            ->with('success', '¡Canal creado exitosamente!');
+            $channel->addMember(Auth::user(), 'admin');
+
+            DB::commit();
+
+            return redirect()->route('channels.show', $channel)
+                ->with('success', 'Canal creado exitosamente');
+
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput()
+                ->with('error', 'Por favor, corrige los errores en el formulario.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating channel', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()
+                ->withInput()
+                ->with('error', 'Error al crear el canal. Por favor, inténtalo de nuevo.');
+        }
     }
 
     /**
@@ -98,40 +130,50 @@ class ChannelController extends Controller
      */
     public function show(Channel $channel)
     {
-        // Verificar si el usuario puede ver el canal
-        if ($channel->is_private && Auth::guest()) {
-            abort(403, 'Este canal es privado.');
+        try {
+            if ($channel->is_private && Auth::guest()) {
+                return redirect()->route('login')
+                    ->with('error', 'Debes iniciar sesión para acceder a este canal privado.');
+            }
+
+            if ($channel->is_private && Auth::check() && !$channel->hasMember(Auth::user())) {
+                return redirect()->route('channels.index')
+                    ->with('error', 'No tienes acceso a este canal privado.');
+            }
+
+            $channel->load(['creator', 'members']);
+
+            $posts = Post::with(['user', 'comments.user'])
+                ->withCount('comments as comments_count_calc')
+                ->where('channel_id', $channel->id)
+                ->latest()
+                ->paginate(10);
+
+            $isMember = Auth::check() && $channel->hasMember(Auth::user());
+            $memberRole = null;
+
+            if ($isMember) {
+                $membership = $channel->members()->where('user_id', Auth::id())->first();
+                $memberRole = $membership ? $membership->pivot->role : null;
+            }
+
+            return Inertia::render('channels/show', [
+                'channel' => $channel,
+                'posts' => $posts,
+                'isMember' => $isMember,
+                'memberRole' => $memberRole,
+                'canModerate' => Auth::check() && $channel->canModerate(Auth::user()),
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error loading channel', [
+                'channel_id' => $channel->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->route('channels.index')
+                ->with('error', 'Error al cargar el canal.');
         }
-
-        if ($channel->is_private && !$channel->hasMember(Auth::user())) {
-            abort(403, 'No tienes acceso a este canal privado.');
-        }
-
-        $channel->load(['creator', 'members']);
-
-        // Posts del canal
-        $posts = Post::with(['user', 'comments.user'])
-            ->withCount('comments as comments_count_calc')
-            ->where('channel_id', $channel->id)
-            ->latest()
-            ->paginate(10);
-
-        // Verificar si el usuario es miembro
-        $isMember = Auth::check() && $channel->hasMember(Auth::user());
-        $memberRole = null;
-
-        if ($isMember) {
-            $membership = $channel->members()->where('user_id', Auth::id())->first();
-            $memberRole = $membership ? $membership->pivot->role : null;
-        }
-
-        return Inertia::render('channels/show', [
-            'channel' => $channel,
-            'posts' => $posts,
-            'isMember' => $isMember,
-            'memberRole' => $memberRole,
-            'canModerate' => Auth::check() && $channel->canModerate(Auth::user()),
-        ]);
     }
 
     /**
@@ -191,22 +233,49 @@ class ChannelController extends Controller
      */
     public function join(Channel $channel)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        if ($channel->is_private) {
-            abort(403, 'No puedes unirte a un canal privado sin invitación.');
+            if ($channel->is_private) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No puedes unirte a un canal privado sin invitación.'
+                ], 403);
+            }
+
+            if ($channel->hasMember($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya eres miembro de este canal.'
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            $channel->addMember($user);
+            $this->notificationService->channelJoined($user, $channel);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Te has unido al canal exitosamente',
+                'isMember' => true
+            ]);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error joining channel', [
+                'channel_id' => $channel->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al unirse al canal. Inténtalo de nuevo.'
+            ], 500);
         }
-
-        if ($channel->hasMember($user)) {
-            return back()->with('error', 'Ya eres miembro de este canal.');
-        }
-
-        $channel->addMember($user);
-
-        // Crear notificación de unión al canal
-        NotificationService::channelJoined($user, $channel);
-
-        return back()->with('success', '¡Te has unido al canal exitosamente!');
     }
 
     /**
@@ -214,20 +283,43 @@ class ChannelController extends Controller
      */
     public function leave(Channel $channel)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        if (!$channel->hasMember($user)) {
-            return back()->with('error', 'No eres miembro de este canal.');
+            if (!$channel->hasMember($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No eres miembro de este canal.'
+                ], 400);
+            }
+
+            if ($channel->created_by === $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El creador del canal no puede abandonarlo.'
+                ], 400);
+            }
+
+            $channel->removeMember($user);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Has abandonado el canal exitosamente',
+                'isMember' => false
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error leaving channel', [
+                'channel_id' => $channel->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al abandonar el canal. Inténtalo de nuevo.'
+            ], 500);
         }
-
-        // El creador no puede abandonar el canal
-        if ($channel->created_by === $user->id) {
-            return back()->with('error', 'El creador del canal no puede abandonarlo.');
-        }
-
-        $channel->removeMember($user);
-
-        return back()->with('success', '¡Has abandonado el canal exitosamente!');
     }
 
     /**
@@ -323,20 +415,29 @@ class ChannelController extends Controller
      */
     public function search(Request $request)
     {
-        $query = $request->query('q');
+        try {
+            $query = trim($request->query('q'));
 
-        if (empty($query)) {
-            return response()->json([]);
+            if (empty($query) || strlen($query) < 2) {
+                return response()->json([]);
+            }
+
+            $channels = Channel::search($query)
+                ->public()
+                ->with(['creator'])
+                ->withCount('members as members_count_calc')
+                ->limit(10)
+                ->get();
+
+            return response()->json($channels);
+        } catch (Exception $e) {
+            Log::error('Error searching channels', [
+                'query' => $request->query('q'),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([], 500);
         }
-
-        $channels = Channel::search($query)
-            ->public()
-            ->with(['creator'])
-            ->withCount('members as members_count_calc')
-            ->limit(10)
-            ->get();
-
-        return response()->json($channels);
     }
 
     /**
@@ -344,28 +445,37 @@ class ChannelController extends Controller
      */
     public function favorites()
     {
-        if (!Auth::check()) {
-            return response()->json(['channels' => []]);
+        try {
+            if (!Auth::check()) {
+                return response()->json(['channels' => []]);
+            }
+
+            $favoriteChannels = Channel::whereHas('members', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->withCount('members as members_count')
+            ->orderBy('members_count', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($channel) {
+                return [
+                    'id' => $channel->id,
+                    'name' => $channel->name,
+                    'slug' => $channel->slug,
+                    'type' => $channel->type,
+                    'members_count' => $channel->members_count,
+                    'is_online' => true,
+                ];
+            });
+
+            return response()->json(['channels' => $favoriteChannels]);
+        } catch (Exception $e) {
+            Log::error('Error loading favorite channels', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json(['channels' => []], 500);
         }
-
-        $favoriteChannels = Channel::whereHas('members', function ($query) {
-            $query->where('user_id', Auth::id());
-        })
-        ->withCount('members as members_count')
-        ->orderBy('members_count', 'desc')
-        ->limit(10)
-        ->get()
-        ->map(function ($channel) {
-            return [
-                'id' => $channel->id,
-                'name' => $channel->name,
-                'slug' => $channel->slug,
-                'type' => $channel->type,
-                'members_count' => $channel->members_count,
-                'is_online' => true, // Por defecto, asumimos que está activo
-            ];
-        });
-
-        return response()->json(['channels' => $favoriteChannels]);
     }
 }

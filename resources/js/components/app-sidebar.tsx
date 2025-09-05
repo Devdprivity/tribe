@@ -18,7 +18,8 @@ import {
     Bookmark,
     Calendar,
     Star,
-    Zap
+    Zap,
+    Award
 } from 'lucide-react';
 
 interface User {
@@ -90,6 +91,7 @@ export function AppSidebar() {
         { name: 'Timeline', href: '/timeline', icon: TrendingUp, badge: null },
         { name: 'Desarrolladores', href: '/users', icon: Users, badge: null },
         { name: 'Canales', href: '/channels', icon: Hash, badge: null },
+        { name: 'Certificaciones', href: '/certifications', icon: Award, badge: null },
         { name: 'Trabajos', href: '/jobs', icon: Briefcase, badge: 'Nuevo' },
         { name: 'Guardados', href: '/bookmarks', icon: Bookmark, badge: null },
     ];

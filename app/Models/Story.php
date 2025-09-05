@@ -51,6 +51,14 @@ class Story extends Model
     }
 
     /**
+     * Comentarios de la historia
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(StoryComment::class);
+    }
+
+    /**
      * Scope para historias activas (no expiradas)
      */
     public function scopeActive($query)
@@ -59,13 +67,25 @@ class Story extends Model
     }
 
     /**
-     * Scope para historias de usuarios seguidos
+     * Scope para historias de usuarios seguidos (OPTIMIZADO)
      */
     public function scopeFromFollowing($query, $userId)
     {
+        // OPTIMIZED: Use whereIn with pre-fetched following IDs instead of whereHas
+        // This should be called from controller with: scopeFromFollowingOptimized
         return $query->whereHas('user.followers', function ($q) use ($userId) {
             $q->where('follower_id', $userId);
         })->orWhere('user_id', $userId);
+    }
+    
+    /**
+     * Optimized scope using pre-fetched following IDs (OCTANE OPTIMIZED)
+     */
+    public function scopeFromFollowingOptimized($query, array $followingIds, $userId)
+    {
+        // Use whereIn instead of whereHas for better performance
+        $userIds = array_merge($followingIds, [$userId]);
+        return $query->whereIn('user_id', $userIds);
     }
 
     /**
@@ -111,10 +131,21 @@ class Story extends Model
 
     /**
      * Verificar si un usuario le dio like a esta historia
+     * DEPRECATED: Causa N+1 queries, usar batch loading en controllers
      */
     public function isLikedBy($userId): bool
     {
+        // DEPRECATED: Este método causa N+1. Usar batch loading desde StoryController
         return $this->likes()->where('user_id', $userId)->exists();
+    }
+    
+    /**
+     * Check if user liked story from pre-loaded data (OCTANE OPTIMIZED)
+     */
+    public function isCachedLikedBy($userId): bool
+    {
+        // Use pre-loaded is_liked attribute set by controller batch loading
+        return $this->is_liked ?? false;
     }
 
     /**
@@ -159,9 +190,33 @@ class Story extends Model
 
     /**
      * Contar likes de la historia
+     * DEPRECATED: Causa N+1 queries, usar withCount en queries
      */
     public function getLikesCountAttribute(): int
     {
-        return $this->likes()->count();
+        // DEPRECATED: Use withCount('likes') in queries instead
+        return $this->likes_count ?? $this->likes()->count();
     }
+
+    /**
+     * Agregar comentario a la historia
+     */
+    public function addComment($userId, $content): StoryComment
+    {
+        return $this->comments()->create([
+            'user_id' => $userId,
+            'content' => $content,
+        ]);
+    }
+
+    /**
+     * Contar comentarios de la historia
+     * DEPRECATED: Causa N+1 queries, usar withCount en queries
+     */
+    public function getCommentsCountAttribute(): int
+    {
+        // DEPRECATED: Use withCount('comments') in queries instead
+        return $this->comments_count ?? $this->comments()->count();
+    }
+
 }

@@ -765,17 +765,35 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
         }
     };
 
+    console.log('CreatePostModal render - isOpen:', isOpen);
+    
+    // Debug: Log when modal should be visible
+    if (isOpen) {
+        console.log('Modal should be visible now');
+    }
+    
+    // Test: Simple modal without Dialog component
+    if (!isOpen) return null;
+
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent 
-                className="max-w-5xl max-h-[95vh] overflow-y-auto bg-black/90 backdrop-blur-xl border-white/20 apple-liquid-card"
-            >
-                <DialogHeader className="pb-4">
-                    <DialogTitle className="text-white text-2xl font-bold">Crear Nuevo Post</DialogTitle>
-                    <DialogDescription className="text-white/70">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center">
+            <div 
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm" 
+                onClick={onClose}
+            />
+            <div className="relative max-w-5xl max-h-[95vh] overflow-y-auto bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 mx-4">
+                <button 
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-white/70 hover:text-white"
+                >
+                    ✕
+                </button>
+                <div className="pb-4">
+                    <h2 className="text-white text-2xl font-bold">Crear Nuevo Post</h2>
+                    <p className="text-white/70">
                         Comparte tu conocimiento con la comunidad creando contenido especializado
-                    </DialogDescription>
-                </DialogHeader>
+                    </p>
+                </div>
                 
                 <div className="space-y-6">
                     {/* Tipo de Post */}
@@ -874,7 +892,7 @@ export default function CreatePostModal({ isOpen, onClose, onPostCreated }: Crea
                         </Button>
                     </div>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </div>
     );
 }

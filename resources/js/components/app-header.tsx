@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useCreatePost } from '@/contexts/create-post-context';
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,11 +17,12 @@ import {
     Search,
     Bell,
     MessageCircle,
-    Plus,
+    Heart,
     Settings,
     LogOut
 } from 'lucide-react';
 import { BackgroundToggle } from '@/components/background-toggle';
+import { MarketplaceIcon } from '@/components/icons/MarketplaceIcon';
 
 interface User {
     id: number;
@@ -84,10 +85,14 @@ const formatTimeAgo = (dateString: string) => {
     return `${Math.floor(diffInSeconds / 2592000)}mes`;
 };
 
-export function AppHeader() {
+interface AppHeaderProps {
+    showActivityModal: boolean;
+    setShowActivityModal: (show: boolean) => void;
+}
+
+export function AppHeader({ showActivityModal, setShowActivityModal }: AppHeaderProps) {
     const props = usePage().props as { auth?: { user: User } };
     const user = props.auth?.user;
-    const { openCreatePostModal } = useCreatePost();
 
     // Notificaciones
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -138,6 +143,11 @@ export function AppHeader() {
         }
     };
 
+    const handleOpenActivityModal = () => {
+        console.log('Opening activity modal...', showActivityModal);
+        setShowActivityModal(true);
+    };
+
     useEffect(() => {
         fetchNotifications();
         fetchChats();
@@ -174,23 +184,71 @@ export function AppHeader() {
                     </div>
                 </div>
 
-                {/* Acciones Centrales */}
-                <div className="flex items-center gap-2">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={openCreatePostModal}
-                        className="bg-blue-500/80 hover:bg-blue-500 text-white border-blue-400/50 shadow-lg shadow-blue-500/25 rounded-xl apple-liquid-button"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Crear Post
-                    </Button>
-                </div>
+
 
                 {/* Acciones del Usuario */}
                 <div className="flex items-center gap-3">
                     {user ? (
                         <>
+                            {/* Botón de Actividad */}
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={handleOpenActivityModal}
+                                className="text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/20 rounded-lg apple-liquid-button"
+                            >
+                                <Heart className="h-5 w-5" />
+                            </Button>
+
+                            {/* Marketplace Dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/20 rounded-lg apple-liquid-button"
+                                        title="Marketplace"
+                                    >
+                                        <MarketplaceIcon className="h-5 w-5" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="w-64 apple-liquid-dropdown">
+                                    <DropdownMenuLabel className="text-white">Marketplace</DropdownMenuLabel>
+                                    <DropdownMenuSeparator className="bg-white/20" />
+                                    <DropdownMenuItem asChild className="text-white hover:bg-white/10">
+                                        <Link href="/marketplace" className="flex items-center gap-2 w-full">
+                                            <MarketplaceIcon className="h-4 w-4" />
+                                            <span>Explorar Productos</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild className="text-white hover:bg-white/10">
+                                        <Link href="/marketplace/create" className="flex items-center gap-2 w-full">
+                                            <span className="text-green-400">+</span>
+                                            <span>Vender Producto</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild className="text-white hover:bg-white/10">
+                                        <Link href="/marketplace/my-products" className="flex items-center gap-2 w-full">
+                                            <span className="text-blue-400">📦</span>
+                                            <span>Mis Productos</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild className="text-white hover:bg-white/10">
+                                        <Link href="/marketplace/my-purchases" className="flex items-center gap-2 w-full">
+                                            <span className="text-purple-400">🛒</span>
+                                            <span>Mis Compras</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-white/20" />
+                                    <DropdownMenuItem asChild className="text-white hover:bg-white/10">
+                                        <Link href="/marketplace/my-sales" className="flex items-center gap-2 w-full">
+                                            <span className="text-yellow-400">💰</span>
+                                            <span>Mis Ventas</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             {/* Notificaciones Dropdown */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

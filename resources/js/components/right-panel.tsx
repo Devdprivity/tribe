@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { UserProfilePanel } from '@/components/user-profile-panel';
 import { NotificationsPanel } from '@/components/notifications-panel';
 import { ChatPanel } from '@/components/chat-panel';
+import { CertificationsPanel } from '@/components/certifications-panel';
 import { useRightPanel } from '@/contexts/right-panel-context';
 
 export default function RightPanel() {
@@ -29,6 +30,7 @@ export default function RightPanel() {
                     /* Panel Expandido */
                     <div className="h-full overflow-y-auto right-panel-scroll relative">
                         <UserProfilePanel />
+                        <CertificationsPanel />
                         <NotificationsPanel />
                         <ChatPanel />
                     </div>

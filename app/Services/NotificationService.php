@@ -8,68 +8,99 @@ use App\Models\Post;
 use App\Models\Comment;
 use App\Models\Channel;
 use App\Models\Job;
+use App\Jobs\SendChannelNotificationJob;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use Exception;
 
 class NotificationService
 {
     /**
+     * Batch size for bulk notification inserts
+     */
+    private const BATCH_SIZE = 100;
+    
+    /**
+     * Channel member threshold for queuing
+     */
+    private const QUEUE_THRESHOLD = 50;
+    /**
      * Crear notificación de like en post
      */
-    public static function postLiked(User $fromUser, Post $post): void
+    public function postLiked(User $fromUser, Post $post): void
     {
-        // No notificar si el usuario se da like a sí mismo
-        if ($fromUser->id === $post->user_id) {
-            return;
-        }
+        try {
+            // No notificar si el usuario se da like a sí mismo
+            if ($fromUser->id === $post->user_id) {
+                return;
+            }
 
-        Notification::create([
-            'user_id' => $post->user_id,
-            'from_user_id' => $fromUser->id,
-            'type' => 'post_like',
-            'title' => 'Nuevo like en tu post',
-            'message' => "@{$fromUser->username} le dio like a tu post",
-            'data' => [
+            $this->createNotification([
+                'user_id' => $post->user_id,
+                'from_user_id' => $fromUser->id,
+                'type' => 'post_like',
+                'title' => 'Nuevo like en tu post',
+                'message' => "@{$fromUser->username} le dio like a tu post",
+                'data' => [
+                    'post_id' => $post->id,
+                    'like_type' => 'like'
+                ],
+                'link' => "/posts/{$post->id}"
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to create post like notification', [
+                'from_user_id' => $fromUser->id,
                 'post_id' => $post->id,
-                'like_type' => 'like'
-            ],
-            'link' => "/posts/{$post->id}"
-        ]);
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
      * Crear notificación de comentario en post
      */
-    public static function postCommented(User $fromUser, Post $post, Comment $comment): void
+    public function postCommented(User $fromUser, Post $post, Comment $comment): void
     {
-        // No notificar si el usuario comenta en su propio post
-        if ($fromUser->id === $post->user_id) {
-            return;
-        }
+        try {
+            // No notificar si el usuario comenta en su propio post
+            if ($fromUser->id === $post->user_id) {
+                return;
+            }
 
-        Notification::create([
-            'user_id' => $post->user_id,
-            'from_user_id' => $fromUser->id,
-            'type' => 'post_comment',
-            'title' => 'Nuevo comentario en tu post',
-            'message' => "@{$fromUser->username} comentó en tu post: \"" . substr($comment->content, 0, 50) . "...\"",
-            'data' => [
+            $this->createNotification([
+                'user_id' => $post->user_id,
+                'from_user_id' => $fromUser->id,
+                'type' => 'post_comment',
+                'title' => 'Nuevo comentario en tu post',
+                'message' => "@{$fromUser->username} comentó en tu post: \"" . substr($comment->content, 0, 50) . "...\"",
+                'data' => [
+                    'post_id' => $post->id,
+                    'comment_id' => $comment->id
+                ],
+                'link' => "/posts/{$post->id}#comment-{$comment->id}"
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to create post comment notification', [
+                'from_user_id' => $fromUser->id,
                 'post_id' => $post->id,
-                'comment_id' => $comment->id
-            ],
-            'link' => "/posts/{$post->id}#comment-{$comment->id}"
-        ]);
+                'comment_id' => $comment->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
      * Crear notificación de like en comentario
      */
-    public static function commentLiked(User $fromUser, Comment $comment): void
+    public function commentLiked(User $fromUser, Comment $comment): void
     {
         // No notificar si el usuario se da like a sí mismo
         if ($fromUser->id === $comment->user_id) {
             return;
         }
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $comment->user_id,
             'from_user_id' => $fromUser->id,
             'type' => 'comment_like',
@@ -86,14 +117,14 @@ class NotificationService
     /**
      * Crear notificación de respuesta a comentario
      */
-    public static function commentReplied(User $fromUser, Comment $parentComment, Comment $reply): void
+    public function commentReplied(User $fromUser, Comment $parentComment, Comment $reply): void
     {
         // No notificar si el usuario responde a su propio comentario
         if ($fromUser->id === $parentComment->user_id) {
             return;
         }
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $parentComment->user_id,
             'from_user_id' => $fromUser->id,
             'type' => 'comment_reply',
@@ -111,14 +142,14 @@ class NotificationService
     /**
      * Crear notificación de nuevo seguidor
      */
-    public static function userFollowed(User $fromUser, User $followedUser): void
+    public function userFollowed(User $fromUser, User $followedUser): void
     {
         // No notificar si el usuario se sigue a sí mismo
         if ($fromUser->id === $followedUser->id) {
             return;
         }
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $followedUser->id,
             'from_user_id' => $fromUser->id,
             'type' => 'user_follow',
@@ -134,14 +165,14 @@ class NotificationService
     /**
      * Crear notificación de unión a canal
      */
-    public static function channelJoined(User $user, Channel $channel): void
+    public function channelJoined(User $user, Channel $channel): void
     {
         // Notificar al creador del canal
         if ($user->id === $channel->created_by) {
             return;
         }
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $channel->created_by,
             'from_user_id' => $user->id,
             'type' => 'channel_join',
@@ -158,9 +189,9 @@ class NotificationService
     /**
      * Crear notificación de invitación a canal
      */
-    public static function channelInvited(User $fromUser, User $invitedUser, Channel $channel): void
+    public function channelInvited(User $fromUser, User $invitedUser, Channel $channel): void
     {
-        Notification::create([
+        $this->createNotification([
             'user_id' => $invitedUser->id,
             'from_user_id' => $fromUser->id,
             'type' => 'channel_invite',
@@ -177,14 +208,14 @@ class NotificationService
     /**
      * Crear notificación de mención
      */
-    public static function userMentioned(User $fromUser, User $mentionedUser, string $context, array $data = []): void
+    public function userMentioned(User $fromUser, User $mentionedUser, string $context, array $data = []): void
     {
         // No notificar si el usuario se menciona a sí mismo
         if ($fromUser->id === $mentionedUser->id) {
             return;
         }
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $mentionedUser->id,
             'from_user_id' => $fromUser->id,
             'type' => 'mention',
@@ -198,14 +229,14 @@ class NotificationService
     /**
      * Crear notificación de aplicación a trabajo
      */
-    public static function jobApplied(User $applicant, Job $job): void
+    public function jobApplied(User $applicant, Job $job): void
     {
         // No notificar si el usuario aplica a su propio trabajo
         if ($applicant->id === $job->posted_by) {
             return;
         }
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $job->posted_by,
             'from_user_id' => $applicant->id,
             'type' => 'job_application',
@@ -222,7 +253,7 @@ class NotificationService
     /**
      * Crear notificación de cambio de estado en aplicación
      */
-    public static function jobStatusChanged(User $applicant, Job $job, string $status): void
+    public function jobStatusChanged(User $applicant, Job $job, string $status): void
     {
         $statusMessages = [
             'reviewed' => 'tu aplicación está siendo revisada',
@@ -233,7 +264,7 @@ class NotificationService
 
         $message = $statusMessages[$status] ?? 'el estado de tu aplicación cambió';
 
-        Notification::create([
+        $this->createNotification([
             'user_id' => $applicant->id,
             'from_user_id' => $job->posted_by,
             'type' => 'job_status_change',
@@ -248,36 +279,43 @@ class NotificationService
     }
 
     /**
-     * Crear notificación de nueva publicación en canal
+     * Crear notificación de nueva publicación en canal - OPTIMIZADO PARA OCTANE
      */
-    public static function channelNewPost(User $fromUser, Post $post, Channel $channel): void
+    public function channelNewPost(User $fromUser, Post $post, Channel $channel): void
     {
-        // Notificar a todos los miembros del canal excepto al autor
-        $channel->members()
-            ->where('user_id', '!=', $fromUser->id)
-            ->get()
-            ->each(function ($member) use ($fromUser, $post, $channel) {
-                Notification::create([
-                    'user_id' => $member->id,
-                    'from_user_id' => $fromUser->id,
-                    'type' => 'channel_new_post',
-                    'title' => 'Nueva publicación en canal',
-                    'message' => "@{$fromUser->username} publicó en {$channel->name}: \"" . substr($post->content, 0, 50) . "...\"",
-                    'data' => [
-                        'post_id' => $post->id,
-                        'channel_id' => $channel->id
-                    ],
-                    'link' => "/posts/{$post->id}"
-                ]);
-            });
+        try {
+            // Get member count first to decide strategy
+            $memberCount = $channel->members()->where('user_id', '!=', $fromUser->id)->count();
+            
+            if ($memberCount === 0) {
+                return;
+            }
+            
+            // Use queuing for large channels to avoid blocking
+            if ($memberCount > self::QUEUE_THRESHOLD) {
+                $this->queueChannelNotification($fromUser, $post, $channel);
+                return;
+            }
+            
+            // For smaller channels, use batch insert
+            $this->batchChannelNewPost($fromUser, $post, $channel);
+            
+        } catch (Exception $e) {
+            Log::error('Failed to create channel new post notifications', [
+                'from_user_id' => $fromUser->id,
+                'post_id' => $post->id,
+                'channel_id' => $channel->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
      * Crear notificación de mensaje directo
      */
-    public static function directMessage(User $fromUser, User $toUser, string $message): void
+    public function directMessage(User $fromUser, User $toUser, string $message): void
     {
-        Notification::create([
+        $this->createNotification([
             'user_id' => $toUser->id,
             'from_user_id' => $fromUser->id,
             'type' => 'direct_message',
@@ -294,16 +332,115 @@ class NotificationService
     /**
      * Crear notificación del sistema
      */
-    public static function systemNotification(User $user, string $title, string $message, array $data = []): void
+    public function systemNotification(User $user, string $title, string $message, array $data = []): void
     {
-        Notification::create([
-            'user_id' => $user->id,
-            'from_user_id' => null,
-            'type' => 'system',
-            'title' => $title,
-            'message' => $message,
-            'data' => $data,
-            'link' => $data['link'] ?? null
+        try {
+            $this->createNotification([
+                'user_id' => $user->id,
+                'from_user_id' => null,
+                'type' => 'system',
+                'title' => $title,
+                'message' => $message,
+                'data' => $data,
+                'link' => $data['link'] ?? null
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to create system notification', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Batch create notifications for channel posts (OCTANE OPTIMIZED)
+     */
+    private function batchChannelNewPost(User $fromUser, Post $post, Channel $channel): void
+    {
+        // Single query to get all member IDs
+        $memberIds = $channel->members()
+            ->where('user_id', '!=', $fromUser->id)
+            ->pluck('user_id')
+            ->toArray();
+            
+        if (empty($memberIds)) {
+            return;
+        }
+        
+        // Prepare batch notifications
+        $notifications = [];
+        $now = now();
+        $messagePreview = substr($post->content, 0, 50) . '...';
+        
+        foreach ($memberIds as $memberId) {
+            $notifications[] = [
+                'user_id' => $memberId,
+                'from_user_id' => $fromUser->id,
+                'type' => 'channel_new_post',
+                'title' => 'Nueva publicación en canal',
+                'message' => "@{$fromUser->username} publicó en {$channel->name}: \"{$messagePreview}\"",
+                'data' => json_encode([
+                    'post_id' => $post->id,
+                    'channel_id' => $channel->id
+                ]),
+                'link' => "/posts/{$post->id}",
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+        
+        // Batch insert in chunks to avoid query size limits
+        $chunks = array_chunk($notifications, self::BATCH_SIZE);
+        
+        foreach ($chunks as $chunk) {
+            Notification::insert($chunk);
+        }
+        
+        Log::info('Batch channel notifications created', [
+            'channel_id' => $channel->id,
+            'post_id' => $post->id,
+            'member_count' => count($memberIds)
         ]);
+    }
+    
+    /**
+     * Queue channel notification for large channels
+     */
+    private function queueChannelNotification(User $fromUser, Post $post, Channel $channel): void
+    {
+        try {
+            // Dispatch job to background queue
+            SendChannelNotificationJob::dispatch($fromUser, $post, $channel)
+                ->delay(now()->addSeconds(2)); // Small delay to ensure post is fully saved
+                
+            Log::info('Channel notification queued for large channel', [
+                'channel_id' => $channel->id,
+                'post_id' => $post->id,
+                'from_user_id' => $fromUser->id,
+                'queue_used' => true
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to queue channel notification, falling back to batch', [
+                'channel_id' => $channel->id,
+                'post_id' => $post->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Fallback to synchronous batch processing
+            $this->batchChannelNewPost($fromUser, $post, $channel);
+        }
+    }
+    
+    /**
+     * Unified notification creation with error handling
+     */
+    private function createNotification(array $data): void
+    {
+        // Ensure data is JSON encoded if it's an array
+        if (isset($data['data']) && is_array($data['data'])) {
+            $data['data'] = json_encode($data['data']);
+        }
+        
+        Notification::create($data);
     }
 }

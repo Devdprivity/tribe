@@ -5,6 +5,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { initializeTheme } from './hooks/use-appearance';
 import { CreatePostProvider } from './contexts/create-post-context';
+import { CreateLiveStreamProvider } from './contexts/create-livestream-context';
 import { RightPanelProvider } from './contexts/right-panel-context';
 import { CommentsProvider } from './contexts/comments-context';
 import { SidebarProvider } from './contexts/sidebar-context';
@@ -22,13 +23,15 @@ createInertiaApp({
 
         root.render(
             <CreatePostProvider>
-                <RightPanelProvider>
-                    <CommentsProvider>
-                        <SidebarProvider>
-                            <App {...props} />
-                        </SidebarProvider>
-                    </CommentsProvider>
-                </RightPanelProvider>
+                <CreateLiveStreamProvider>
+                    <RightPanelProvider>
+                        <CommentsProvider>
+                            <SidebarProvider>
+                                <App {...props} />
+                            </SidebarProvider>
+                        </CommentsProvider>
+                    </RightPanelProvider>
+                </CreateLiveStreamProvider>
             </CreatePostProvider>
         );
     },

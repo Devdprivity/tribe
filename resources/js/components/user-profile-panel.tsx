@@ -140,7 +140,10 @@ export function UserProfilePanel() {
                     <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={openCreatePostModal}
+                        onClick={() => {
+                            console.log('Nuevo Post button clicked in profile panel');
+                            openCreatePostModal();
+                        }}
                         className="w-full justify-start text-white hover:bg-white/10 hover:text-white border border-transparent hover:border-white/20 rounded-lg apple-liquid-button"
                     >
                         <Plus className="h-4 w-4 mr-2" />
